@@ -3,18 +3,72 @@
     "id": 1,
     "title": "窓 — 松本",
     "memo": "光の入り方が完璧だった。",
+    "loc": "長野県松本市",
     "tags": ["窓", "光と影"],
     "collection": "窓と光",
     "date": "2026/03/12",
-    "emoji": "🪟"
+    "emoji": "🪟",
+    "img": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
+    "bg": "#d0d8c8"
   },
   {
     "id": 2,
-    "title": "石の壁",
-    "memo": "時間が染み込んでいる。",
+    "title": "教会の外壁",
+    "memo": "石の積み方に時間を感じた。",
+    "loc": "岡山市",
     "tags": ["石", "テクスチャ"],
     "collection": "石",
-    "date": "2026/03/01",
-    "emoji": "🪨"
+    "date": "2026/03/08",
+    "emoji": "🏛️",
+    "img": "https://images.unsplash.com/photo-1548515641-4b5cf2b63222?w=400&q=80",
+    "bg": "#e0d8cc"
+  },
+  {
+    "id": 3,
+    "title": "螺旋階段",
+    "memo": "幾何学と錆の共存。",
+    "loc": "神戸市",
+    "tags": ["金属", "錆", "光と影"],
+    "collection": "錆と腐",
+    "date": "2026/02/28",
+    "emoji": "🌀",
+    "img": "https://images.unsplash.com/photo-1558618047-3c8c76ca7b0e?w=400&q=80",
+    "bg": "#c8b8a0"
+  },
+  {
+    "id": 4,
+    "title": "たばこ屋の看板",
+    "memo": "昭和の色褪せ方が好き。",
+    "loc": "大阪市",
+    "tags": ["路地", "朽ちた"],
+    "collection": "影",
+    "date": "2026/02/20",
+    "emoji": "🚬",
+    "img": "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=400&q=80",
+    "bg": "#b8c0b4"
+  },
+  {
+    "id": 5,
+    "title": "廃墟の階段",
+    "memo": "苔と石の境界線。",
+    "loc": "京都府",
+    "tags": ["苔", "石", "朽ちた"],
+    "collection": "苔・植物",
+    "date": "2026/02/15",
+    "emoji": "🪨",
+    "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80",
+    "bg": "#b4b8c4"
+  },
+  {
+    "id": 6,
+    "title": "路地の壁",
+    "memo": "無数の層が重なっている。",
+    "loc": "長野県松本市",
+    "tags": ["路地", "テクスチャ", "コンクリート"],
+    "collection": "影",
+    "date": "2026/02/10",
+    "emoji": "🏙️",
+    "img": "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&q=80",
+    "bg": "#c4b8a8"
   }
 ]
