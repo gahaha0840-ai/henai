@@ -21,7 +21,7 @@ export default function Layout({ children }) {
         </div>
 
         <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <Link to="/">マイ図鑑</Link>
+          <Link to="/">図鑑</Link>
           <Link to="/zukan">図鑑</Link>
           <Link to="/obs">観測</Link>
         </nav>
