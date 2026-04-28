@@ -1,3 +1,3 @@
 export default function Home() {
-  return <h1>Home画面</h1>;
+  return <h1>📖 マイ図鑑</h1>;
 }

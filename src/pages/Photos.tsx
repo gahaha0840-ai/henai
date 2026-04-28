@@ -1,0 +1,4 @@
+// NAVでのパスが "/obs" なので、ここに対応させます
+export default function Observation() {
+  return <h1>🔍 観測データ</h1>;
+}

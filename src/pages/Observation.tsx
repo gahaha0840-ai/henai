@@ -1,0 +1,3 @@
+export default function Photos() {
+  return <h1>📷 写真一覧</h1>;
+}
