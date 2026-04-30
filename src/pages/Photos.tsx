@@ -6,6 +6,7 @@ const colors = {
   subtext: "#A39B8B",
   accent: "#A68A61",
   border: "#E6E0D4",
+  bg: "#F8F6F0",
 };
 
 const fonts = {
@@ -14,31 +15,12 @@ const fonts = {
   mono: '"SF Mono", "Courier New", monospace',
 };
 
-const PIN_COLORS = [
-  "#c0392b",
-  "#e67e22",
-  "#27ae60",
-  "#2980b9",
-  "#8e44ad",
-  "#c0392b",
-];
+const PIN_COLORS = ["#c0392b", "#e67e22", "#27ae60", "#2980b9", "#8e44ad"];
 const ROTATIONS = [-3.5, -2, -1, 1.5, 2.5, -2.5, 3, -1.5, 0.5, -3];
-
-// 日付ごとにグループ化
-function groupByDate(items: Item[]): Record<string, Item[]> {
-  return items.reduce(
-    (acc, item) => {
-      const key = item.date ?? "日付なし";
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(item);
-      return acc;
-    },
-    {} as Record<string, Item[]>,
-  );
-}
 
 export default function Photos() {
   const [items, setItems] = useState<Item[]>([]);
+  const [selTag, setSelTag] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<Item | null>(null);
 
   useEffect(() => {
@@ -47,111 +29,122 @@ export default function Photos() {
       .then(setItems);
   }, []);
 
-  const grouped = groupByDate(items);
-  const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+  const allTags = [...new Set(items.flatMap((i) => i.tags ?? []))];
+  const displayed = selTag
+    ? items.filter((i) => i.tags?.includes(selTag))
+    : items;
 
   return (
     <>
-      {/* コルクボード全体 */}
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "#B8864E",
-          backgroundImage: [
-            "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 11px)",
-            "repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(0,0,0,0.02) 10px, rgba(0,0,0,0.02) 11px)",
-          ].join(", "),
-          padding: "32px 40px",
-          position: "relative",
-        }}
-      >
-        {/* タイトル */}
-        <div style={{ marginBottom: "36px" }}>
-          <h1
-            style={{
-              fontFamily: fonts.serif,
-              fontSize: "22px",
-              color: "#FFFDF5",
-              letterSpacing: "0.08em",
-              textShadow: "0 1px 3px rgba(0,0,0,0.3)",
-              margin: 0,
-            }}
-          >
-            📌 Myフォト
-          </h1>
-          <p
+      {/* ── コルクボード外のヘッダー ── */}
+      <div style={{ padding: "0 0 20px 0" }}>
+        <h1
+          style={{
+            fontFamily: fonts.serif,
+            fontSize: "26px",
+            fontWeight: "bold",
+            color: colors.text,
+            letterSpacing: "0.05em",
+            marginBottom: "16px",
+          }}
+        >
+          🖼️ Myフォト
+        </h1>
+
+        {/* タグ検索 */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "8px",
+            alignItems: "center",
+          }}
+        >
+          <span
             style={{
               fontSize: "11px",
-              color: "rgba(255,253,245,0.6)",
-              marginTop: 4,
+              color: colors.subtext,
               fontFamily: fonts.sans,
+              marginRight: 4,
             }}
           >
-            {items.length} 枚の記録
-          </p>
+            タグ
+          </span>
+          <TagChip
+            label="すべて"
+            active={selTag === null}
+            onClick={() => setSelTag(null)}
+          />
+          {allTags.map((t) => (
+            <TagChip
+              key={t}
+              label={t}
+              active={selTag === t}
+              onClick={() => setSelTag(selTag === t ? null : t)}
+            />
+          ))}
         </div>
 
-        {/* 日付グループ */}
-        {sortedDates.map((date) => (
-          <div key={date} style={{ marginBottom: "48px" }}>
-            {/* 付箋風日付ラベル */}
-            <div
-              style={{
-                display: "inline-block",
-                background: "#FFF9C4",
-                color: "#5a4a30",
-                fontFamily: fonts.mono,
-                fontSize: "12px",
-                fontWeight: "bold",
-                padding: "6px 16px 8px",
-                borderRadius: "2px",
-                marginBottom: "20px",
-                boxShadow: "2px 3px 8px rgba(0,0,0,0.2)",
-                transform: "rotate(-1deg)",
-                position: "relative",
-                letterSpacing: "0.05em",
-              }}
-            >
-              {/* 付箋の折り目 */}
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  right: 0,
-                  width: 0,
-                  height: 0,
-                  borderStyle: "solid",
-                  borderWidth: "0 0 10px 10px",
-                  borderColor: "transparent transparent #e8e098 transparent",
-                }}
-              />
-              {date}
-            </div>
-
-            {/* 写真グリッド */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-                gap: "28px",
-                padding: "8px 4px",
-              }}
-            >
-              {grouped[date].map((item, i) => (
-                <PhotoPin
-                  key={item.id}
-                  item={item}
-                  rotation={ROTATIONS[(item.id + i) % ROTATIONS.length]}
-                  pinColor={PIN_COLORS[(item.id + i) % PIN_COLORS.length]}
-                  onClick={() => setLightbox(item)}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
+        <div
+          style={{
+            fontSize: "11px",
+            color: colors.subtext,
+            fontFamily: fonts.sans,
+            marginTop: "10px",
+          }}
+        >
+          {displayed.length} 枚
+        </div>
       </div>
 
-      {/* ライトボックス */}
+      {/* ── コルクボード ── */}
+      <div
+        style={{
+          background: "#B8864E",
+          backgroundImage: [
+            "repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(0,0,0,0.03) 10px,rgba(0,0,0,0.03) 11px)",
+            "repeating-linear-gradient(-45deg,transparent,transparent 10px,rgba(0,0,0,0.02) 10px,rgba(0,0,0,0.02) 11px)",
+          ].join(", "),
+          borderRadius: "12px",
+          padding: "32px 28px 40px",
+        }}
+      >
+        {displayed.length === 0 ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "60px 0",
+              color: "rgba(255,253,245,0.5)",
+              fontSize: "13px",
+              fontFamily: fonts.sans,
+              fontStyle: "italic",
+            }}
+          >
+            このタグの記録はまだありません
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(155px, 1fr))",
+              gap: "32px 24px",
+              alignItems: "start",
+            }}
+          >
+            {displayed.map((item, i) => (
+              <PhotoPin
+                key={item.id}
+                item={item}
+                rotation={ROTATIONS[(item.id + i) % ROTATIONS.length]}
+                pinColor={PIN_COLORS[(item.id + i) % PIN_COLORS.length]}
+                onClick={() => setLightbox(item)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── ライトボックス ── */}
       {lightbox && (
         <div
           onClick={() => setLightbox(null)}
@@ -172,7 +165,7 @@ export default function Photos() {
               background: "#FFFDF5",
               borderRadius: 4,
               padding: "16px 16px 20px",
-              maxWidth: 460,
+              maxWidth: 440,
               width: "90%",
               boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
               cursor: "default",
@@ -181,7 +174,7 @@ export default function Photos() {
             <div
               style={{
                 width: "100%",
-                maxHeight: 320,
+                maxHeight: 300,
                 overflow: "hidden",
                 display: "flex",
                 alignItems: "center",
@@ -194,7 +187,7 @@ export default function Photos() {
                 <img
                   src={lightbox.img}
                   alt={lightbox.title}
-                  style={{ width: "100%", maxHeight: 320, objectFit: "cover" }}
+                  style={{ width: "100%", maxHeight: 300, objectFit: "cover" }}
                 />
               ) : (
                 <span style={{ fontSize: 72 }}>{lightbox.emoji}</span>
@@ -284,6 +277,37 @@ export default function Photos() {
   );
 }
 
+// ── タグチップ ──
+function TagChip({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        fontSize: "11px",
+        padding: "4px 13px",
+        borderRadius: "9999px",
+        border: `1px solid ${active ? colors.accent : colors.border}`,
+        background: active ? colors.accent : colors.bg,
+        color: active ? "#fff" : colors.subtext,
+        cursor: "pointer",
+        fontFamily: fonts.sans,
+        transition: "all 0.15s",
+      }}
+    >
+      {active && "# "}
+      {label}
+    </button>
+  );
+}
+
 // ── ピン留め写真カード ──
 function PhotoPin({
   item,
@@ -305,12 +329,15 @@ function PhotoPin({
       onMouseLeave={() => setHovered(false)}
       style={{
         transform: hovered
-          ? "rotate(0deg) translateY(-6px) scale(1.03)"
+          ? "rotate(0deg) translateY(-6px) scale(1.04)"
           : `rotate(${rotation}deg)`,
-        transition: "transform 0.2s ease, box-shadow 0.2s ease",
-        filter: `drop-shadow(${hovered ? "3px 8px 16px rgba(0,0,0,0.35)" : "2px 4px 8px rgba(0,0,0,0.25)"})`,
+        transition: "transform 0.2s ease, filter 0.2s ease",
+        filter: `drop-shadow(${
+          hovered
+            ? "3px 8px 16px rgba(0,0,0,0.4)"
+            : "2px 4px 8px rgba(0,0,0,0.25)"
+        })`,
         cursor: "zoom-in",
-        position: "relative",
       }}
     >
       {/* ピン */}
@@ -328,19 +355,12 @@ function PhotoPin({
         }}
       />
 
-      {/* ポラロイド風カード */}
-      <div
-        style={{
-          background: "#FFFDF5",
-          borderRadius: 2,
-          overflow: "hidden",
-          paddingBottom: 8,
-        }}
-      >
+      {/* ポラロイド */}
+      <div style={{ background: "#FFFDF5", borderRadius: 2 }}>
         <div
           style={{
             width: "100%",
-            height: 130,
+            height: 120,
             background: item.bg ?? "#E6E0D4",
             display: "flex",
             alignItems: "center",
@@ -352,39 +372,36 @@ function PhotoPin({
             <img
               src={item.img}
               alt={item.title}
-              style={{ width: "100%", height: 130, objectFit: "cover" }}
+              style={{ width: "100%", height: 120, objectFit: "cover" }}
             />
           ) : (
-            <span style={{ fontSize: 40 }}>{item.emoji}</span>
+            <span style={{ fontSize: 38 }}>{item.emoji}</span>
           )}
         </div>
-
-        {/* タイトル */}
-        <div style={{ padding: "8px 10px 2px" }}>
+        <div style={{ padding: "7px 10px 10px" }}>
           <div
             style={{
               fontSize: 9,
               fontWeight: "bold",
               color: "#3a2e22",
-              lineHeight: 1.3,
               fontFamily: fonts.serif,
+              whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
             }}
           >
             {item.title}
           </div>
-          {item.loc && (
+          {item.date && (
             <div
               style={{
                 fontSize: 8,
-                color: "#9a8878",
+                color: "#b8a890",
+                fontFamily: fonts.mono,
                 marginTop: 2,
-                fontFamily: fonts.sans,
               }}
             >
-              📍 {item.loc}
+              {item.date}
             </div>
           )}
         </div>
