@@ -16,32 +16,5 @@
     "collection": "石",
     "date": "2026/03/01",
     "emoji": "🪨"
-  },
-  {
-    "id": 3,
-    "title": "謎の塔",
-    "memo": "螺旋階段が見える。何の建物だろう？",
-    "tags": ["石", "テクスチャ"],
-    "collection": "建築",
-    "date": "2024/06/01",
-    "emoji": "<img src=\"https://i.pinimg.com/736x/7a/82/92/7a8292b8a33c279b31f6074d85f837e5.jpg\" alt=\"🧸\" class=\"emoji\">"
-  },
-  {
-    "id": 4,
-    "title": "たばこ",
-    "memo": "もう忘れた",
-    "tags": ["廃れ", "テクスチャ"],
-    "collection": "建築",
-    "date": "2024/07/14",
-    "emoji": "<img src=\"https://i.pinimg.com/1200x/af/57/c8/af57c8d4d2a284b8def444afc7af9adf.jpg\" alt=\"🧸\" class=\"emoji\">"
-  },
-  {
-    "id": 5,
-    "title": "なんのためのなに",
-    "memo": "長いな",
-    "tags": ["コンクリート", "人工物"],
-    "collection": "石",
-    "date": "2023/05/13",
-    "emoji": "<img src=\"https://i.pinimg.com/736x/2e/08/6d/2e086dcebee023a18c41d0b7bea25486.jpg\" alt=\"🧸\" class=\"emoji\">"
   }
 ]
