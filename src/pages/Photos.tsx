@@ -1,38 +1,45 @@
 import { useEffect, useState } from "react";
-import Layout from "../components/Layout";
 import { Item } from "../types";
 
 const colors = {
-  bg: "#F8F6F0",
   text: "#3D3328",
   subtext: "#A39B8B",
   accent: "#A68A61",
   border: "#E6E0D4",
-  card: "#FCFAEF",
 };
 
 const fonts = {
   serif: '"Noto Serif JP", "Hiragino Mincho ProN", serif',
   sans: '"Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
+  mono: '"SF Mono", "Courier New", monospace',
 };
 
-const COLLECTIONS = [
-  "すべて",
-  "錆と腐",
-  "苔・植物",
-  "窓と光",
-  "石",
-  "雨と水",
-  "木と板",
-  "影",
+const PIN_COLORS = [
+  "#c0392b",
+  "#e67e22",
+  "#27ae60",
+  "#2980b9",
+  "#8e44ad",
+  "#c0392b",
 ];
+const ROTATIONS = [-3.5, -2, -1, 1.5, 2.5, -2.5, 3, -1.5, 0.5, -3];
 
-type ViewMode = "grid" | "cork";
+// 日付ごとにグループ化
+function groupByDate(items: Item[]): Record<string, Item[]> {
+  return items.reduce(
+    (acc, item) => {
+      const key = item.date ?? "日付なし";
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(item);
+      return acc;
+    },
+    {} as Record<string, Item[]>,
+  );
+}
 
 export default function Photos() {
   const [items, setItems] = useState<Item[]>([]);
-  const [filter, setFilter] = useState("すべて");
-  const [view, setView] = useState<ViewMode>("grid");
+  const [lightbox, setLightbox] = useState<Item | null>(null);
 
   useEffect(() => {
     fetch("/data.json")
@@ -40,335 +47,347 @@ export default function Photos() {
       .then(setItems);
   }, []);
 
-  const displayed =
-    filter === "すべて" ? items : items.filter((i) => i.collection === filter);
+  const grouped = groupByDate(items);
+  const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
   return (
     <>
-      {/* ページヘッダー */}
-      <div style={{ marginBottom: "28px" }}>
-        <h1
-          style={{
-            fontSize: "28px",
-            fontWeight: "bold",
-            fontFamily: fonts.serif,
-            color: colors.text,
-            marginBottom: "8px",
-            letterSpacing: "0.05em",
-          }}
-        >
-          🖼️ Myフォト
-        </h1>
-        <p style={{ fontSize: "13px", color: colors.subtext, lineHeight: 1.6 }}>
-          集めた断片たち。コレクションで整理しよう。
-        </p>
-      </div>
-
-      {/* ツールバー：フィルター + 表示切り替え */}
+      {/* コルクボード全体 */}
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: "16px",
-          marginBottom: "24px",
-          flexWrap: "wrap",
+          minHeight: "100vh",
+          background: "#B8864E",
+          backgroundImage: [
+            "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 11px)",
+            "repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(0,0,0,0.02) 10px, rgba(0,0,0,0.02) 11px)",
+          ].join(", "),
+          padding: "32px 40px",
+          position: "relative",
         }}
       >
-        {/* コレクションフィルター */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-          {COLLECTIONS.map((c) => (
-            <button
-              key={c}
-              onClick={() => setFilter(c)}
+        {/* タイトル */}
+        <div style={{ marginBottom: "36px" }}>
+          <h1
+            style={{
+              fontFamily: fonts.serif,
+              fontSize: "22px",
+              color: "#FFFDF5",
+              letterSpacing: "0.08em",
+              textShadow: "0 1px 3px rgba(0,0,0,0.3)",
+              margin: 0,
+            }}
+          >
+            📌 Myフォト
+          </h1>
+          <p
+            style={{
+              fontSize: "11px",
+              color: "rgba(255,253,245,0.6)",
+              marginTop: 4,
+              fontFamily: fonts.sans,
+            }}
+          >
+            {items.length} 枚の記録
+          </p>
+        </div>
+
+        {/* 日付グループ */}
+        {sortedDates.map((date) => (
+          <div key={date} style={{ marginBottom: "48px" }}>
+            {/* 付箋風日付ラベル */}
+            <div
               style={{
+                display: "inline-block",
+                background: "#FFF9C4",
+                color: "#5a4a30",
+                fontFamily: fonts.mono,
                 fontSize: "12px",
-                padding: "5px 14px",
-                borderRadius: "9999px",
-                border: `1px solid ${filter === c ? colors.accent : colors.border}`,
-                background: filter === c ? colors.accent : colors.bg,
-                color: filter === c ? "#fff" : colors.subtext,
-                cursor: "pointer",
-                fontFamily: fonts.sans,
-                transition: "all 0.15s",
+                fontWeight: "bold",
+                padding: "6px 16px 8px",
+                borderRadius: "2px",
+                marginBottom: "20px",
+                boxShadow: "2px 3px 8px rgba(0,0,0,0.2)",
+                transform: "rotate(-1deg)",
+                position: "relative",
+                letterSpacing: "0.05em",
               }}
             >
-              {c}
-            </button>
-          ))}
-        </div>
+              {/* 付箋の折り目 */}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  right: 0,
+                  width: 0,
+                  height: 0,
+                  borderStyle: "solid",
+                  borderWidth: "0 0 10px 10px",
+                  borderColor: "transparent transparent #e8e098 transparent",
+                }}
+              />
+              {date}
+            </div>
 
-        {/* グリッド / コルク 切り替え */}
-        <div
-          style={{
-            display: "flex",
-            gap: "4px",
-            flexShrink: 0,
-            background: colors.border,
-            borderRadius: "8px",
-            padding: "3px",
-          }}
-        >
-          {(["grid", "cork"] as ViewMode[]).map((v) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
+            {/* 写真グリッド */}
+            <div
               style={{
-                fontSize: "11px",
-                padding: "5px 12px",
-                borderRadius: "6px",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: fonts.sans,
-                background: view === v ? colors.card : "transparent",
-                color: view === v ? colors.text : colors.subtext,
-                boxShadow: view === v ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-                transition: "all 0.15s",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+                gap: "28px",
+                padding: "8px 4px",
               }}
             >
-              {v === "grid" ? "⊞ グリッド" : "📌 コルク"}
+              {grouped[date].map((item, i) => (
+                <PhotoPin
+                  key={item.id}
+                  item={item}
+                  rotation={ROTATIONS[(item.id + i) % ROTATIONS.length]}
+                  pinColor={PIN_COLORS[(item.id + i) % PIN_COLORS.length]}
+                  onClick={() => setLightbox(item)}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ライトボックス */}
+      {lightbox && (
+        <div
+          onClick={() => setLightbox(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 100,
+            background: "rgba(0,0,0,0.75)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "zoom-out",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#FFFDF5",
+              borderRadius: 4,
+              padding: "16px 16px 20px",
+              maxWidth: 460,
+              width: "90%",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+              cursor: "default",
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                maxHeight: 320,
+                overflow: "hidden",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: lightbox.bg ?? "#E6E0D4",
+                marginBottom: 14,
+              }}
+            >
+              {lightbox.img ? (
+                <img
+                  src={lightbox.img}
+                  alt={lightbox.title}
+                  style={{ width: "100%", maxHeight: 320, objectFit: "cover" }}
+                />
+              ) : (
+                <span style={{ fontSize: 72 }}>{lightbox.emoji}</span>
+              )}
+            </div>
+            <div
+              style={{
+                fontFamily: fonts.serif,
+                fontSize: 15,
+                fontWeight: "bold",
+                color: colors.text,
+                marginBottom: 6,
+              }}
+            >
+              {lightbox.title}
+            </div>
+            {lightbox.memo && (
+              <div
+                style={{
+                  fontSize: 12,
+                  color: colors.subtext,
+                  lineHeight: 1.6,
+                  marginBottom: 10,
+                }}
+              >
+                {lightbox.memo}
+              </div>
+            )}
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 5,
+                marginBottom: 10,
+              }}
+            >
+              {lightbox.tags.map((t) => (
+                <span
+                  key={t}
+                  style={{
+                    fontSize: 10,
+                    padding: "2px 9px",
+                    borderRadius: 9999,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.subtext,
+                    fontFamily: fonts.sans,
+                  }}
+                >
+                  # {t}
+                </span>
+              ))}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 10,
+                color: colors.subtext,
+              }}
+            >
+              {lightbox.loc && <span>📍 {lightbox.loc}</span>}
+              {lightbox.date && (
+                <span style={{ fontFamily: fonts.mono }}>{lightbox.date}</span>
+              )}
+            </div>
+            <button
+              onClick={() => setLightbox(null)}
+              style={{
+                marginTop: 16,
+                width: "100%",
+                padding: "8px",
+                background: "transparent",
+                border: `1px solid ${colors.border}`,
+                borderRadius: 6,
+                color: colors.subtext,
+                fontSize: 12,
+                cursor: "pointer",
+                fontFamily: fonts.sans,
+              }}
+            >
+              閉じる
             </button>
-          ))}
+          </div>
         </div>
-      </div>
-
-      {/* 件数 */}
-      <div
-        style={{
-          fontSize: "12px",
-          color: colors.subtext,
-          marginBottom: "16px",
-        }}
-      >
-        {filter === "すべて" ? "すべて" : `「${filter}」`} — {displayed.length}{" "}
-        件
-      </div>
-
-      {/* 空状態 */}
-      {displayed.length === 0 && (
-        <div
-          style={{
-            textAlign: "center",
-            padding: "60px 0",
-            color: colors.subtext,
-            fontSize: "13px",
-            fontStyle: "italic",
-          }}
-        >
-          このコレクションにはまだ記録がありません
-        </div>
-      )}
-
-      {/* グリッドビュー */}
-      {view === "grid" && displayed.length > 0 && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-            gap: "16px",
-          }}
-        >
-          {displayed.map((item) => (
-            <PhotoCard key={item.id} item={item} />
-          ))}
-        </div>
-      )}
-
-      {/* コルクビュー */}
-      {view === "cork" && displayed.length > 0 && (
-        <CorkBoard items={displayed} />
       )}
     </>
   );
 }
 
-// ── グリッド用カード ──
-function PhotoCard({ item }: { item: Item }) {
+// ── ピン留め写真カード ──
+function PhotoPin({
+  item,
+  rotation,
+  pinColor,
+  onClick,
+}: {
+  item: Item;
+  rotation: number;
+  pinColor: string;
+  onClick: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+
   return (
     <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        background: colors.card,
-        borderRadius: "12px",
-        overflow: "hidden",
-        border: `1px solid ${colors.border}`,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+        transform: hovered
+          ? "rotate(0deg) translateY(-6px) scale(1.03)"
+          : `rotate(${rotation}deg)`,
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+        filter: `drop-shadow(${hovered ? "3px 8px 16px rgba(0,0,0,0.35)" : "2px 4px 8px rgba(0,0,0,0.25)"})`,
+        cursor: "zoom-in",
+        position: "relative",
       }}
     >
+      {/* ピン */}
       <div
         style={{
-          height: 130,
-          background: item.bg ?? "#E6E0D4",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          width: 12,
+          height: 12,
+          borderRadius: "50%",
+          background: pinColor,
+          border: "2px solid rgba(0,0,0,0.2)",
+          margin: "0 auto -6px",
+          position: "relative",
+          zIndex: 2,
+          boxShadow: "0 2px 4px rgba(0,0,0,0.4)",
+        }}
+      />
+
+      {/* ポラロイド風カード */}
+      <div
+        style={{
+          background: "#FFFDF5",
+          borderRadius: 2,
           overflow: "hidden",
+          paddingBottom: 8,
         }}
       >
-        {item.img ? (
-          <img
-            src={item.img}
-            alt={item.title}
-            style={{ width: "100%", height: 130, objectFit: "cover" }}
-          />
-        ) : (
-          <span style={{ fontSize: 44 }}>{item.emoji}</span>
-        )}
-      </div>
-      <div style={{ padding: "12px 14px" }}>
         <div
           style={{
-            fontWeight: "bold",
-            fontSize: "13px",
-            color: colors.text,
-            marginBottom: "4px",
-            fontFamily: fonts.serif,
-          }}
-        >
-          {item.title}
-        </div>
-        {item.memo && (
-          <div
-            style={{
-              fontSize: "11px",
-              color: colors.subtext,
-              lineHeight: 1.5,
-              marginBottom: "8px",
-            }}
-          >
-            {item.memo}
-          </div>
-        )}
-        <div
-          style={{
+            width: "100%",
+            height: 130,
+            background: item.bg ?? "#E6E0D4",
             display: "flex",
-            flexWrap: "wrap",
-            gap: "5px",
-            marginBottom: "8px",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden",
           }}
         >
-          {item.tags.map((t) => (
-            <span
-              key={t}
-              style={{
-                fontSize: "10px",
-                padding: "2px 8px",
-                borderRadius: "9999px",
-                border: `1px solid ${colors.border}`,
-                background: colors.bg,
-                color: colors.subtext,
-              }}
-            >
-              # {t}
-            </span>
-          ))}
-        </div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontSize: "10px",
-            color: colors.subtext,
-          }}
-        >
-          {item.loc && <span>📍 {item.loc}</span>}
-          {item.date && <span>{item.date}</span>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── コルクボード ──
-const PIN_COLORS = ["#c04030", "#e8a020", "#3a9040", "#304860", "#5a3060"];
-const ROTATIONS = [-2.5, 1.2, -1, 2, -1.5, 0.8, -2, 1.5];
-
-function CorkBoard({ items }: { items: Item[] }) {
-  return (
-    <div
-      style={{
-        background: "#C8A06A",
-        borderRadius: "12px",
-        padding: "24px",
-        backgroundImage:
-          "repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(0,0,0,0.02) 10px,rgba(0,0,0,0.02) 11px)",
-      }}
-    >
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-          gap: "20px",
-        }}
-      >
-        {items.map((item, i) => (
-          <div
-            key={item.id}
-            style={{
-              transform: `rotate(${ROTATIONS[i % ROTATIONS.length]}deg)`,
-              filter: "drop-shadow(2px 4px 8px rgba(0,0,0,0.25))",
-            }}
-          >
-            {/* ピン */}
-            <div
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                background: PIN_COLORS[i % PIN_COLORS.length],
-                margin: "0 auto -5px",
-                position: "relative",
-                zIndex: 2,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.4)",
-              }}
+          {item.img ? (
+            <img
+              src={item.img}
+              alt={item.title}
+              style={{ width: "100%", height: 130, objectFit: "cover" }}
             />
+          ) : (
+            <span style={{ fontSize: 40 }}>{item.emoji}</span>
+          )}
+        </div>
+
+        {/* タイトル */}
+        <div style={{ padding: "8px 10px 2px" }}>
+          <div
+            style={{
+              fontSize: 9,
+              fontWeight: "bold",
+              color: "#3a2e22",
+              lineHeight: 1.3,
+              fontFamily: fonts.serif,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {item.title}
+          </div>
+          {item.loc && (
             <div
               style={{
-                background: "#FFFDF5",
-                borderRadius: 2,
-                overflow: "hidden",
+                fontSize: 8,
+                color: "#9a8878",
+                marginTop: 2,
+                fontFamily: fonts.sans,
               }}
             >
-              <div
-                style={{
-                  height: 90,
-                  background: item.bg ?? "#E6E0D4",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  overflow: "hidden",
-                }}
-              >
-                {item.img ? (
-                  <img
-                    src={item.img}
-                    alt={item.title}
-                    style={{ width: "100%", height: 90, objectFit: "cover" }}
-                  />
-                ) : (
-                  <span style={{ fontSize: 32 }}>{item.emoji}</span>
-                )}
-              </div>
-              <div style={{ padding: "6px 8px 8px" }}>
-                <div
-                  style={{
-                    fontSize: 9,
-                    fontWeight: "bold",
-                    color: "#3a2e22",
-                    lineHeight: 1.3,
-                    marginBottom: 2,
-                  }}
-                >
-                  {item.title}
-                </div>
-                {item.loc && (
-                  <div style={{ fontSize: 8, color: "#9a8878" }}>
-                    📍{item.loc}
-                  </div>
-                )}
-              </div>
+              📍 {item.loc}
             </div>
-          </div>
-        ))}
+          )}
+        </div>
       </div>
     </div>
   );
