@@ -24,7 +24,7 @@
     "tags": ["石", "テクスチャ"],
     "collection": "建築",
     "date": "2024/06/01",
-    "emoji": "<img src=\"https://i.pinimg.com/736x/7a/82/92/7a8292b8a33c279b31f6074d85f837e5.jpg\" alt=\"🧸\" class=\"emoji\">"
+    "img": "https://i.pinimg.com/736x/7a/82/92/7a8292b8a33c279b31f6074d85f837e5.jpg"
   },
   {
     "id": 4,
@@ -33,7 +33,7 @@
     "tags": ["廃れ", "テクスチャ"],
     "collection": "建築",
     "date": "2024/07/14",
-    "emoji": "<img src=\"https://i.pinimg.com/1200x/af/57/c8/af57c8d4d2a284b8def444afc7af9adf.jpg\" alt=\"🧸\" class=\"emoji\">"
+    "emoji": "https://i.pinimg.com/1200x/af/57/c8/af57c8d4d2a284b8def444afc7af9adf.jpg"
   },
   {
     "id": 5,
@@ -42,6 +42,6 @@
     "tags": ["コンクリート", "人工物"],
     "collection": "石",
     "date": "2023/05/13",
-    "emoji": "<img src=\"https://i.pinimg.com/736x/2e/08/6d/2e086dcebee023a18c41d0b7bea25486.jpg\" alt=\"🧸\" class=\"emoji\">"
+    "img": "https://i.pinimg.com/736x/2e/08/6d/2e086dcebee023a18c41d0b7bea25486.jpg"
   }
 ]
