@@ -44,7 +44,7 @@ export default function Photos() {
     filter === "すべて" ? items : items.filter((i) => i.collection === filter);
 
   return (
-    <Layout>
+    <>
       {/* ページヘッダー */}
       <div style={{ marginBottom: "28px" }}>
         <h1
@@ -178,7 +178,7 @@ export default function Photos() {
       {view === "cork" && displayed.length > 0 && (
         <CorkBoard items={displayed} />
       )}
-    </Layout>
+    </>
   );
 }
 
