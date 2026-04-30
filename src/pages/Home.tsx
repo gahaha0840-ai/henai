@@ -1,7 +1,8 @@
 // src/pages/Home.tsx
 import React, { useState, useEffect } from 'react';
-import PhotoCard, { PhotoData } from '../components/PhotoCard.tsx';
-import ZukanCard, { ZukanData } from '../components/ZukanCard.tsx';
+import { PhotoMaterial, Collection } from '../types/index.ts';
+import PhotoCard from '../components/PhotoCard.tsx';
+import ZukanCard from '../components/ZukanCard.tsx';
 
 const Home = () => {
   const colors = {
@@ -12,13 +13,12 @@ const Home = () => {
     card: '#FCFAEF',
   };
 
-  const [photos, setPhotos] = useState<PhotoData[]>([]);
-  const [zukanItems, setZukanItems] = useState<ZukanData[]>([]);
+  const [photos, setPhotos] = useState<PhotoMaterial[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // 📝 【開発用設定】ここを true にするとAPIから取得、false にするとダミーデータを使います
-  // APIが完成したら、ここを true に書き換えるだけで本番環境に切り替わります！
   const USE_REAL_API = false; 
 
   useEffect(() => {
@@ -31,61 +31,62 @@ const Home = () => {
           // ==========================================
           // 🚀 本番モード：APIからデータを取得する処理
           // ==========================================
-          const [photosResponse, zukanResponse] = await Promise.all([
-            fetch('http://localhost:8000/api/photos'), // ← PythonのURLに合わせて後で修正
-            fetch('http://localhost:8000/api/zukan')   // ← 同上
+          const [photosResponse, collectionsResponse] = await Promise.all([
+            fetch('http://localhost:8000/api/photos'), 
+            fetch('http://localhost:8000/api/collections') // URLはバックエンドに合わせて調整してください
           ]);
 
-          if (!photosResponse.ok || !zukanResponse.ok) {
+          if (!photosResponse.ok || !collectionsResponse.ok) {
             throw new Error('サーバーからのデータ取得に失敗しました');
           }
 
-          const photosData: PhotoData[] = await photosResponse.json();
-          const zukanData: ZukanData[] = await zukanResponse.json();
+          const photosData: PhotoMaterial[] = await photosResponse.json();
+          const collectionsData: Collection[] = await collectionsResponse.json();
 
           setPhotos(photosData);
-          setZukanItems(zukanData);
+          setCollections(collectionsData);
 
         } else {
           // ==========================================
           // 🛠️ 開発モード：ダミーデータを使用する処理
           // ==========================================
-          const dummyPhotos: PhotoData[] = [
-            { id: 1, imageUrl: "https://placehold.co/600x600/1A1A24/E6E0D4?text=Night+Sky", title: "夜空", location: "長野県 茅野市" },
-            { id: 2, imageUrl: "https://placehold.co/600x600/E6E0D4/3D3328?text=Corne+v4", title: "自作キーボード", location: "自室デスク" },
-            { id: 3, imageUrl: "https://placehold.co/600x600/A68A61/FCFAEF?text=VR+HMD", title: "HMDテスト", location: "研究室" },
-            { id: 4, imageUrl: "https://placehold.co/600x600/2E3440/D8DEE9?text=3D+Print", title: "3Dプリント", location: "作業部屋" },
-            { id: 5, imageUrl: "https://placehold.co/600x600/7B8B6F/FCFAEF?text=Landscape", title: "風景", location: "散歩道" },
+          const dummyPhotos: PhotoMaterial[] = [
+            { id: "p1", userId: "u1", imageUrl: "https://placehold.co/600x600/1A1A24/E6E0D4?text=Night+Sky", title: "夜空", aiTags: ["#星空", "#静寂"], createdAt: "2026-04-28T23:15:00Z" },
+            { id: "p2", userId: "u1", imageUrl: "https://placehold.co/600x600/E6E0D4/3D3328?text=Corne+v4", title: "自作キーボード", aiTags: ["#ガジェット", "#自作"], createdAt: "2026-04-25T14:30:00Z" },
+            { id: "p3", userId: "u1", imageUrl: "https://placehold.co/600x600/A68A61/FCFAEF?text=VR+HMD", title: "HMDテスト", aiTags: ["#VR", "#プロトタイプ"], createdAt: "2026-04-22T10:00:00Z" },
+            { id: "p4", userId: "u1", imageUrl: "https://placehold.co/600x600/2E3440/D8DEE9?text=3D+Print", title: "3Dプリント", aiTags: ["#造形", "#試作"], createdAt: "2026-04-20T16:45:00Z" },
           ];
 
-          const dummyZukan: ZukanData[] = [
+          const dummyCollections: Collection[] = [
             { 
-              id: 1, 
+              id: "c1", 
+              authorId: "u1", 
               title: "Corne v4 スイッチホルダー", 
-              description: "Bambu Lab A1 miniとFreeCADで設計したオリジナルパーツ。試行錯誤の末に寸法がピッタリ合った瞬間の快感は異常。", 
-              date: "2026.04.28", 
-              imageUrl: "https://placehold.co/600x400/E6E0D4/3D3328?text=Corne+v4" 
+              thumbnailUrl: "https://placehold.co/600x400/E6E0D4/3D3328?text=Corne+v4",
+              content: "Bambu Lab A1 miniとFreeCADで設計したオリジナルパーツ。試行錯誤の末に寸法がピッタリ合った瞬間の快感は異常。キーボード沼はまだまだ深い。", 
+              imageUrls: ["https://placehold.co/600x400/E6E0D4/3D3328?text=Corne+v4"],
+              aiTags: ["#3Dプリンタ", "#自作キーボード", "#設計"],
+              createdAt: "2026-04-28T10:00:00Z" 
             },
             { 
-              id: 2, 
-              title: "星空撮影テスト", 
-              description: "Canon G9 Xを使って深夜に撮影。コンパクト機でもマニュアル設定でここまで綺麗に星空が撮れることに感動している。", 
-              date: "2026.04.25", 
-              imageUrl: "https://placehold.co/600x400/1A1A24/E6E0D4?text=Night+Sky" 
+              id: "c2", 
+              authorId: "u1", 
+              title: "星空撮影の記録", 
+              thumbnailUrl: "https://placehold.co/600x400/1A1A24/E6E0D4?text=Night+Sky",
+              content: "Canon G9 Xを使って深夜に撮影。コンパクト機でもマニュアル設定でここまで綺麗に星空が撮れることに感動している。次はレンズヒーターを導入したい。", 
+              imageUrls: ["https://placehold.co/600x400/1A1A24/E6E0D4?text=Night+Sky"],
+              aiTags: ["#写真", "#夜景", "#カメラ"],
+              createdAt: "2026-04-25T02:30:00Z" 
             },
             { 
-              id: 3, 
-              title: "偏愛図鑑 バックエンドAPI", 
-              description: "ハッカソン用にPythonで構築中のAPI。ニッチな趣味や作りかけのプロジェクトを共有できるプラットフォームの心臓部。", 
-              date: "2026.04.20", 
-              imageUrl: "https://placehold.co/600x400/2E3440/D8DEE9?text=Python+API" 
-            },
-            { 
-              id: 4, 
-              title: "VR UI プロトタイプ", 
-              description: "HMDのトラッキングデータを活かした新しい操作感をFigmaで検証中。視線と手の動きの連動が鍵になりそう。", 
-              date: "2026.04.15", 
-              imageUrl: "https://placehold.co/600x400/A68A61/FCFAEF?text=Figma+UI" 
+              id: "c3", 
+              authorId: "u1", 
+              title: "VR UI プロトタイピング", 
+              thumbnailUrl: "https://placehold.co/600x400/A68A61/FCFAEF?text=Figma+UI",
+              content: "HMDのトラッキングデータを活かした新しい操作感をFigmaで検証中。視線と手の動きの連動が鍵になりそう。空間UIの正解を探す日々。", 
+              imageUrls: ["https://placehold.co/600x400/A68A61/FCFAEF?text=Figma+UI"],
+              aiTags: ["#UIUX", "#VR", "#Figma"],
+              createdAt: "2026-04-15T18:20:00Z" 
             },
           ];
 
@@ -93,7 +94,7 @@ const Home = () => {
           await new Promise(resolve => setTimeout(resolve, 800));
           
           setPhotos(dummyPhotos);
-          setZukanItems(dummyZukan);
+          setCollections(dummyCollections);
         }
 
       } catch (err) {
@@ -105,27 +106,11 @@ const Home = () => {
     };
 
     fetchData();
-  }, [USE_REAL_API]); // USE_REAL_APIの値が変わったら再実行する
+  }, [USE_REAL_API]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
       
-      {/* ページタイトルエリア */}
-      {/* <div>
-        <h1 style={{ 
-          fontSize: '24px', 
-          fontWeight: 'bold', 
-          display: 'inline-block',
-          borderBottom: `3px solid ${colors.accent}`,
-          paddingBottom: '4px'
-        }}>
-          マイ偏愛キャビネット
-        </h1>
-        <p style={{ color: colors.subtext, fontSize: '14px', marginTop: '8px' }}>
-          切り取った瞬間と、集めたこだわりの標本たち。
-        </p>
-      </div> */}
-
       {/* エラー時の表示 */}
       {error && (
         <div style={{ padding: '16px', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: '8px' }}>
@@ -140,7 +125,7 @@ const Home = () => {
         </div>
       ) : !error && (
         <>
-          {/* --- 上段：Myフォト（最新の4件を一列に表示） --- */}
+          {/* --- 上段：最近のフォト --- */}
           <section>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '16px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: colors.text }}>
@@ -169,7 +154,7 @@ const Home = () => {
 
           <div style={{ height: '1px', backgroundColor: colors.border, width: '100%' }} />
 
-          {/* --- 下段：図鑑カード（グリッド表示） --- */}
+          {/* --- 下段：最近の図鑑（コレクション） --- */}
           <section>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: colors.text }}>
@@ -180,7 +165,7 @@ const Home = () => {
               </span>
             </div>
             
-            {zukanItems.length === 0 ? (
+            {collections.length === 0 ? (
               <p style={{ color: colors.subtext, fontSize: '14px' }}>まだコレクションがありません。</p>
             ) : (
               <div style={{ 
@@ -188,7 +173,7 @@ const Home = () => {
                 gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
                 gap: '24px' 
               }}>
-                {zukanItems.map(item => (
+                {collections.map(item => (
                   <ZukanCard key={item.id} item={item} />
                 ))}
               </div>

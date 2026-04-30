@@ -1,55 +1,48 @@
 // src/components/PhotoCard.tsx
 import React from 'react';
+import { PhotoMaterial } from '../types/index.ts';
 
-export interface PhotoData {
-  id: number;
-  imageUrl: string;
-  title: string;
-  location: string;
+interface PhotoCardProps {
+  photo: PhotoMaterial;
 }
 
-const PhotoCard = ({ photo }: { photo: PhotoData }) => {
+const PhotoCard: React.FC<PhotoCardProps> = ({ photo }) => {
   return (
-    <div style={{
-      position: 'relative',
-      backgroundColor: '#FFFFFF',
-      // 白いフチの部分（上・左右は狭め、下はテキスト用に広め）
-      padding: '16px 16px 24px 16px', 
-      boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      marginTop: '12px' // 上のピンのための余白
-    }}>
-      
-      {/* 上部中央のグレーのピン */}
+    <div style={{ width: '100%', cursor: 'pointer' }}>
+      {/* 写真エリア (正方形) */}
       <div style={{
-        position: 'absolute',
-        top: '-10px', 
-        width: '20px',
-        height: '20px',
-        backgroundColor: '#C0C0C0',
-        borderRadius: '50%',
-        boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.1)'
-      }} />
-
-      {/* 写真エリア */}
-      <div style={{ width: '100%', aspectRatio: '1 / 1', overflow: 'hidden', marginBottom: '16px' }}>
+        aspectRatio: '1 / 1',
+        overflow: 'hidden',
+        borderRadius: '8px',
+        backgroundColor: '#E6E0D4', // 画像読み込み前のプレースホルダー色
+        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+      }}>
         <img 
           src={photo.imageUrl} 
-          alt={photo.title} 
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+          alt={photo.title}
+          style={{ 
+            width: '100%', 
+            height: '100%', 
+            objectFit: 'cover',
+            transition: 'transform 0.3s ease'
+          }} 
+          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
         />
       </div>
 
-      {/* テキストエリア */}
-      <h3 style={{ margin: '0 0 8px 0', fontSize: '24px', fontWeight: 'normal', color: '#111', letterSpacing: '0.05em' }}>
+      {/* タイトル */}
+      <p style={{ 
+        marginTop: '8px', 
+        fontSize: '14px', 
+        fontWeight: 'bold',
+        color: '#3D3328',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }}>
         {photo.title}
-      </h3>
-      <p style={{ margin: 0, fontSize: '16px', color: '#555' }}>
-        {photo.location}
       </p>
-
     </div>
   );
 };
