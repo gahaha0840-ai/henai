@@ -21,15 +21,7 @@ const ROTATIONS = [-3.5, -2, -1, 1.5, 2.5, -2.5, 3, -1.5, 0.5, -3];
 export default function Photos() {
   const [items, setItems] = useState<Item[]>([]);
   const [selTag, setSelTag] = useState<string | null>(null);
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const lightbox = lightboxIndex !== null ? displayed[lightboxIndex] : null;
-
-  const goPrev = () =>
-    setLightboxIndex((i) => (i !== null && i > 0 ? i - 1 : i));
-  const goNext = () =>
-    setLightboxIndex((i) =>
-      i !== null && i < displayed.length - 1 ? i + 1 : i,
-    );
+  const [lightbox, setLightbox] = useState<Item | null>(null);
 
   useEffect(() => {
     fetch("/data.json")
