@@ -38,7 +38,6 @@ export default function Observation() {
       <div style={{ marginBottom: "32px" }}>
         <h1
           style={{
-            marginTop: "0px",
             fontSize: "28px",
             fontWeight: "bold",
             fontFamily: fonts.serif,
@@ -98,6 +97,7 @@ export default function Observation() {
 
       {/* カードグリッド */}
       {displayed.length === 0 ? (
+        // タグ絞り込み後にアイテムがない場合の表示
         <div
           style={{
             textAlign: "center",
@@ -110,11 +110,13 @@ export default function Observation() {
           このタグの記録はまだありません
         </div>
       ) : (
+        // アイテムがある場合のカードグリッド表示
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-            gap: "16px",
+            gap: "28px",
+            padding: "12px",
           }}
         >
           {displayed.map((item) => (
@@ -157,6 +159,12 @@ function TagChip({
   );
 }
 
+//ランダムな回転を与えて、観測カードに少し動きをつける
+const ROTATIONS = [-3, -2, -1.5, -1, 1, 1.5, 2, 3];
+function randRot(id: number) {
+  return ROTATIONS[id % ROTATIONS.length];
+}
+
 // ── 観測カード ──
 function ObsCard({
   item,
@@ -165,15 +173,28 @@ function ObsCard({
   item: Item;
   onTagClick: (tag: string) => void;
 }) {
+  //ホバー状態の管理（カードを少し浮かせるエフェクトに使う）
+  const [hovered, setHovered] = useState(false);
+  const rot = randRot(item.id);
+
   return (
     <div
+      //ホバーで少し浮かせる＆回転させるスタイル
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         background: colors.card,
         borderRadius: "12px",
         overflow: "hidden",
         border: `1px solid ${colors.border}`,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-        transition: "box-shadow 0.15s",
+        boxShadow: hovered
+          ? "0 8px 24px rgba(0,0,0,0.12)"
+          : "0 2px 6px rgba(0,0,0,0.07)",
+        transform: hovered
+          ? "rotate(0deg) translateY(-4px)"
+          : `rotate(${rot}deg)`,
+        transition: "transform 0.25s ease, box-shadow 0.25s ease",
+        cursor: "pointer",
       }}
     >
       {/* 画像 or 絵文字 */}
