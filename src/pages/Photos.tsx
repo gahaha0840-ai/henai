@@ -1,4 +1,4 @@
-// NAVでのパスが "/obs" なので、ここに対応させます
-export default function Observation() {
-  return <h1>🔍 観測データ</h1>;
+// NAVでのパスが "/photos" なので、ここに対応させます
+export default function Photos() {
+  return <h1>📷 写真一覧</h1>;
 }

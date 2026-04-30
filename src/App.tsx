@@ -7,10 +7,10 @@
 //export default App;
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Layout from "./components/Layout";
-import Home from "./pages/Home";
-import Photos from "./pages/Photos";
-import Observation from "./pages/Observation";
+import Layout from "./components/Layout.tsx";
+import Home from "./pages/Home.tsx";
+import Photos from "./pages/Photos.tsx";
+import Observation from "./pages/Observation.tsx";
 
 function App() {
   return (
@@ -19,7 +19,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/photos" element={<Photos />} />
-          <Route path="/obs" element={<Observation />} />
+          <Route path="/observation" element={<Observation />} />
         </Routes>
       </Layout>
     </BrowserRouter>

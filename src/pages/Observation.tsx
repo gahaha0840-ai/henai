@@ -1,3 +1,3 @@
-export default function Photos() {
-  return <h1>📷 写真一覧</h1>;
+export default function Observation() {
+  return <h1>🔍 観測データ</h1>;
 }
