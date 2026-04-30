@@ -33,25 +33,6 @@ export default function Observation() {
 
   return (
     <Layout>
-      {/* ページヘッダー */}
-      <div style={{ marginBottom: "32px" }}>
-        <h1
-          style={{
-            fontSize: "28px",
-            fontWeight: "bold",
-            fontFamily: fonts.serif,
-            color: colors.text,
-            marginBottom: "8px",
-            letterSpacing: "0.05em",
-          }}
-        >
-          🔭 観測
-        </h1>
-        <p style={{ fontSize: "13px", color: colors.subtext, lineHeight: 1.6 }}>
-          タグから世界を観測する。気になる断片を手がかりに、好きを深掘りしよう。
-        </p>
-      </div>
-
       {/* タグフィルター */}
       <div style={{ marginBottom: "24px" }}>
         <div
