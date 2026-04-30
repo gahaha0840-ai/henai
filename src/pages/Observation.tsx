@@ -38,7 +38,7 @@ export default function Observation() {
       <div style={{ marginBottom: "32px" }}>
         <h1
           style={{
-            marginTop: "4px",
+            marginTop: "0px",
             fontSize: "28px",
             fontWeight: "bold",
             fontFamily: fonts.serif,
