@@ -182,7 +182,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* 3. 右サイドバー（統計・活動記録） */}
       <aside
         style={{
-          width: "250px",
+          width: "200px",
           borderLeft: `1px solid ${colors.border}`,
           padding: "24px",
           backgroundColor: "rgba(248, 246, 240, 0.5)",
