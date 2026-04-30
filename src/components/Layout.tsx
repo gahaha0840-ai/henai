@@ -52,7 +52,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* 1. 左サイドバー（ナビゲーション） */}
       <aside
         style={{
-          width: "200px",
+          width: "150px",
           borderRight: `1px solid ${colors.border}`,
           padding: "24px",
           display: "flex",
@@ -182,7 +182,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* 3. 右サイドバー（統計・活動記録） */}
       <aside
         style={{
-          width: "200px",
+          width: "250px",
           borderLeft: `1px solid ${colors.border}`,
           padding: "24px",
           backgroundColor: "rgba(248, 246, 240, 0.5)",
