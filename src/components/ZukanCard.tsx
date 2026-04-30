@@ -1,50 +1,90 @@
 // src/components/ZukanCard.tsx
 import React from 'react';
+import { Collection } from '../types/index.ts';
 
-export interface ZukanData {
-  id: number;
-  imageUrl: string;
-  title: string;
-  description: string;
-  date: string;
+interface ZukanCardProps {
+  item: Collection;
 }
 
-const ZukanCard = ({ item }: { item: ZukanData }) => {
+const ZukanCard: React.FC<ZukanCardProps> = ({ item }) => {
+  // 日付を「YYYY.MM.DD」の形式に変換
+  const formattedDate = new Date(item.createdAt)
+    .toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })
+    .replace(/\//g, '.');
+
   return (
     <div style={{
-      backgroundColor: '#FFFFFF',
-      borderRadius: '8px',
+      backgroundColor: '#FCFAEF',
+      border: '1px solid #E6E0D4',
+      borderRadius: '12px',
       overflow: 'hidden',
-      border: '1px solid #E0DCD3',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      
-      {/* 写真エリア（枠いっぱいまで広げる） */}
-      <div style={{ width: '100%', aspectRatio: '4 / 3', overflow: 'hidden' }}>
+      boxShadow: '0 4px 6px rgba(0,0,0,0.02)',
+      transition: 'box-shadow 0.2s',
+      cursor: 'pointer'
+    }}
+    onMouseOver={(e) => e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.05)'}
+    onMouseOut={(e) => e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.02)'}
+    >
+      {/* サムネイルエリア (16:9) */}
+      <div style={{ aspectRatio: '16 / 9', overflow: 'hidden', backgroundColor: '#E6E0D4' }}>
         <img 
-          src={item.imageUrl} 
-          alt={item.title} 
+          src={item.thumbnailUrl} 
+          alt={item.title}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
         />
       </div>
 
-      {/* テキストエリア */}
+      {/* コンテンツエリア */}
       <div style={{ padding: '16px' }}>
-        <h3 style={{ margin: '0 0 4px 0', fontSize: '20px', fontWeight: 'bold', color: '#111' }}>
+        {/* 日付 */}
+        <div style={{ fontSize: '12px', color: '#A39B8B', marginBottom: '6px' }}>
+          {formattedDate}
+        </div>
+        
+        {/* タイトル */}
+        <h3 style={{ 
+          fontSize: '18px', 
+          fontWeight: 'bold', 
+          color: '#3D3328',
+          margin: '0 0 8px 0'
+        }}>
           {item.title}
         </h3>
-        <p style={{ margin: '0 0 24px 0', fontSize: '16px', color: '#888' }}>
-          {item.description}
+        
+        {/* 内容（2行で切り捨て） */}
+        <p style={{ 
+          fontSize: '14px', 
+          color: '#3D3328', 
+          lineHeight: '1.6',
+          margin: '0 0 12px 0',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden'
+        }}>
+          {item.content}
         </p>
         
-        {/* 日付（右下寄せ） */}
-        <div style={{ textAlign: 'right', fontSize: '16px', color: '#111' }}>
-          {item.date}
-        </div>
+        {/* AIタグ (最大3つまで表示) */}
+        {item.aiTags && item.aiTags.length > 0 && (
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {item.aiTags.slice(0, 3).map(tag => (
+              <span 
+                key={tag} 
+                style={{ 
+                  fontSize: '11px', 
+                  color: '#A68A61',
+                  backgroundColor: 'rgba(166, 138, 97, 0.1)',
+                  padding: '2px 8px',
+                  borderRadius: '4px'
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
-
     </div>
   );
 };
