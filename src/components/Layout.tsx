@@ -51,6 +51,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { path: '/photos',      label: 'フォト', icon: '🖼️' },
     { path: '/zukan',       label: '図鑑',   icon: '📖' },
     { path: '/observation', label: '観測',   icon: '🔭' },
+    { path: '/record', label: '記録する', icon: '✏️' },
   ];
 
   return (
