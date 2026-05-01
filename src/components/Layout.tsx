@@ -5,32 +5,31 @@ import { Link, useLocation } from 'react-router-dom';
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
 
-  // ── レイアウト定数 ──
-  const LEFT_FULL  = 220;
-  const LEFT_MINI  = 72;
+  const LEFT_FULL   = 220;
+  const LEFT_MINI   = 72;
   const RIGHT_WIDTH = 280;
 
-  // ── ブレークポイント ──
-  // 1300px 未満 → 左をアイコン化
-  // 1000px 未満 → 左アイコン化 ＋ 右を閉じる
-  const BREAK_COLLAPSE_LEFT  = 1300;
-  const BREAK_CLOSE_RIGHT    = 1000;
+  const BREAK_COLLAPSE_LEFT = 1300;
+  const BREAK_CLOSE_RIGHT   = 1000;
 
-  const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
-  const [isRightOpen,     setIsRightOpen]     = useState(true);
+  const [userOverride,  setUserOverride]  = useState<boolean | null>(null);
+  const [autoCollapsed, setAutoCollapsed] = useState(false);
+  const [isRightOpen,   setIsRightOpen]   = useState(true);
+
+  const isLeftCollapsed = userOverride !== null ? userOverride : autoCollapsed;
 
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth;
-      setIsLeftCollapsed(w < BREAK_COLLAPSE_LEFT);
+      setAutoCollapsed(w < BREAK_COLLAPSE_LEFT);
       setIsRightOpen(w >= BREAK_CLOSE_RIGHT);
+      setUserOverride(null);
     };
     update();
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
 
-  // ── 配色 ──
   const colors = {
     bg:      '#F8F6F0',
     text:    '#3D3328',
@@ -45,13 +44,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     sans:  '"Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
   };
 
-  // ── ナビゲーション定義 ──
   const navItems = [
-    { path: '/',            label: 'ホーム', icon: '🏠' },
-    { path: '/photos',      label: 'フォト', icon: '🖼️' },
-    { path: '/zukan',       label: '図鑑',   icon: '📖' },
-    { path: '/observation', label: '観測',   icon: '🔭' },
-    { path: '/record', label: '記録する', icon: '✏️' },
+    { path: '/',            label: 'ホーム',   icon: '🏠' },
+    { path: '/photos',      label: 'フォト',   icon: '🖼️' },
+    { path: '/zukan',       label: '図鑑',     icon: '📖' },
+    { path: '/observation', label: '観測',     icon: '🔭' },
+    { path: '/record',      label: '記録する', icon: '✏️' },
   ];
 
   return (
@@ -75,35 +73,73 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         flexDirection: 'column',
         flexShrink: 0,
         backgroundColor: colors.bg,
+        overflow: 'hidden',
         transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         zIndex: 40,
       }}>
-        {/* ロゴ */}
-        <Link to="/" style={{
+
+        {/* ヘッダー部分 */}
+        <div style={{
           display: 'flex',
-          justifyContent: isLeftCollapsed ? 'center' : 'flex-start',
+          justifyContent: isLeftCollapsed ? 'center' : 'space-between',
           alignItems: 'center',
           marginBottom: '40px',
-          padding: '0 12px',
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-          textDecoration: 'none',
-          color: 'inherit',
+          padding: '0 4px',
+          height: '44px',
         }}>
           {isLeftCollapsed ? (
-            // アイコン化時はロゴ文字の代わりに絵文字だけ表示
-            <span style={{ fontSize: '22px' }}>📚</span>
-          ) : (
-            <span style={{
-              fontWeight: 'bold',
-              fontSize: '20px',
-              letterSpacing: '0.1em',
-              fontFamily: fonts.serif,
+            /* 最小化時：📚アイコンのみ */
+            <Link to="/" style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textDecoration: 'none',
             }}>
-              偏愛図鑑
-            </span>
+              <span style={{ fontSize: '22px' }}>📚</span>
+            </Link>
+          ) : (
+            /* 展開時：ロゴ＋閉じるボタン */
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '100%',
+              padding: '0 8px',
+            }}>
+              <Link to="/" style={{
+                display: 'flex',
+                alignItems: 'center',
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
+                textDecoration: 'none',
+                color: 'inherit',
+              }}>
+                <span style={{
+                  fontWeight: 'bold',
+                  fontSize: '20px',
+                  letterSpacing: '0.1em',
+                  fontFamily: fonts.serif,
+                }}>
+                  偏愛図鑑
+                </span>
+              </Link>
+              <button
+                onClick={() => setUserOverride(true)}
+                title="サイドバーを閉じる"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: colors.subtext,
+                  fontSize: '20px',
+                  flexShrink: 0,
+                }}
+              >
+                ◀
+              </button>
+            </div>
           )}
-        </Link>
+        </div>
 
         {/* メニューリスト */}
         <nav style={{ flex: 1, padding: '0 4px' }}>
@@ -126,7 +162,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   backgroundColor: isActive ? 'rgba(166, 138, 97, 0.1)' : 'transparent',
                   transition: 'all 0.2s ease',
                   marginBottom: '8px',
-                  overflow: 'hidden',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -139,6 +174,35 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           })}
         </nav>
       </aside>
+
+      {/* ── 最小化時の展開ボタン（中央コンテンツ側の左上） ── */}
+      {isLeftCollapsed && (
+        <button
+          onClick={() => setUserOverride(false)}
+          title="サイドバーを開く"
+          style={{
+            position: 'absolute',
+            top: '20px',
+            left: `${LEFT_MINI + 16}px`,
+            zIndex: 100,
+            background: colors.card,
+            border: `1px solid ${colors.border}`,
+            borderRadius: '50%',
+            width: '44px',
+            height: '44px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+            color: colors.accent,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '18px',
+            transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
+          ▶
+        </button>
+      )}
 
       {/* ── 2. 中央メインコンテンツ ── */}
       <main style={{
@@ -185,7 +249,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         zIndex: 20,
       }}>
         <div style={{ minWidth: `${RIGHT_WIDTH}px`, height: '100%', position: 'relative' }}>
-          {/* 閉じるボタン */}
           <button
             onClick={() => setIsRightOpen(false)}
             style={{
@@ -197,7 +260,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             ▶
           </button>
 
-          {/* コンテンツエリア */}
           <div style={{ padding: '70px 24px 24px' }}>
             <section style={{ marginBottom: '40px' }}>
               <h4 style={{ color: colors.subtext, marginBottom: '20px', fontSize: '13px' }}>
