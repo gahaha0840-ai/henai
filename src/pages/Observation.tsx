@@ -1,14 +1,13 @@
+// src/pages/Observation.tsx
 import { useEffect, useState } from "react";
-import Layout from "../components/Layout";
-import { Item } from "../types";
+import { PhotoMaterial } from "../types/index.ts";
+import ItemCard from "../components/ItemCard.tsx";
+import TagChip from "../components/TagChip.tsx";
 
 const colors = {
   bg: "#F8F6F0",
   text: "#3D3328",
   subtext: "#A39B8B",
-  accent: "#A68A61",
-  border: "#E6E0D4",
-  card: "#FCFAEF",
 };
 
 const fonts = {
@@ -16,17 +15,29 @@ const fonts = {
   sans: '"Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
 };
 
-//状態
 export default function Observation() {
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<PhotoMaterial[]>([]);
   const [selTag, setSelTag] = useState<string | null>(null);
-  //データの読み込み
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    fetch("/data.json")
-      .then((r) => r.json())
-      .then(setItems);
+    const loadItems = async () => {
+      try {
+        const res = await fetch("/data.json");
+        if (!res.ok) {
+          throw new Error(`データの取得に失敗しました (${res.status})`);
+        }
+        const data: PhotoMaterial[] = await res.json();
+        setItems(data);
+      } catch (err) {
+        console.error(err);
+        setError("データの読み込みに失敗しました。再読み込みしてください。");
+      }
+    };
+
+    loadItems();
   }, []);
-  //タグの抽出と表示アイテムの絞り込み
+
   const allTags = [...new Set(items.flatMap((i) => i.tags ?? []))];
   const displayed = selTag
     ? items.filter((i) => i.tags?.includes(selTag))
@@ -34,7 +45,7 @@ export default function Observation() {
 
   return (
     <>
-      {/* ページヘッダー */}
+      {/* ── ページヘッダー ── */}
       <div style={{ marginBottom: "32px" }}>
         <h1
           style={{
@@ -53,7 +64,7 @@ export default function Observation() {
         </p>
       </div>
 
-      {/* タグフィルター */}
+      {/* ── タグフィルター ── */}
       <div style={{ marginBottom: "24px" }}>
         <div
           style={{
@@ -72,6 +83,8 @@ export default function Observation() {
             label="すべて"
             active={selTag === null}
             onClick={() => setSelTag(null)}
+            fontSize="12px"
+            padding="5px 14px"
           />
           {allTags.map((t) => (
             <TagChip
@@ -79,12 +92,29 @@ export default function Observation() {
               label={t}
               active={selTag === t}
               onClick={() => setSelTag(selTag === t ? null : t)}
+              fontSize="12px"
+              padding="5px 14px"
             />
           ))}
         </div>
       </div>
 
-      {/* 件数表示 */}
+      {/* ── エラー表示 ── */}
+      {error ? (
+        <div
+          style={{
+            padding: "16px",
+            borderRadius: "12px",
+            background: "#ffecec",
+            color: "#991b1b",
+            marginBottom: "24px",
+          }}
+        >
+          {error}
+        </div>
+      ) : null}
+
+      {/* ── 件数表示 ── */}
       <div
         style={{
           fontSize: "12px",
@@ -95,9 +125,8 @@ export default function Observation() {
         {selTag ? `「${selTag}」` : "すべて"} — {displayed.length} 件
       </div>
 
-      {/* カードグリッド */}
+      {/* ── カードグリッド ── */}
       {displayed.length === 0 ? (
-        // タグ絞り込み後にアイテムがない場合の表示
         <div
           style={{
             textAlign: "center",
@@ -110,7 +139,6 @@ export default function Observation() {
           このタグの記録はまだありません
         </div>
       ) : (
-        // アイテムがある場合のカードグリッド表示
         <div
           style={{
             display: "grid",
@@ -120,173 +148,10 @@ export default function Observation() {
           }}
         >
           {displayed.map((item) => (
-            <ObsCard key={item.id} item={item} onTagClick={setSelTag} />
+            <ItemCard key={item.id} item={item} onTagClick={setSelTag} />
           ))}
         </div>
       )}
     </>
-  );
-}
-
-// ── タグチップ ──
-function TagChip({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        fontSize: "12px",
-        padding: "5px 14px",
-        borderRadius: "9999px",
-        border: `1px solid ${active ? colors.accent : colors.border}`,
-        background: active ? colors.accent : colors.bg,
-        color: active ? "#fff" : colors.subtext,
-        cursor: "pointer",
-        fontFamily: fonts.sans,
-        transition: "all 0.15s",
-      }}
-    >
-      {active ? "# " : ""}
-      {label}
-    </button>
-  );
-}
-
-//ランダムな回転を与えて、観測カードに少し動きをつける
-const ROTATIONS = [-3, -2, -1.5, -1, 1, 1.5, 2, 3];
-function randRot(id: number) {
-  return ROTATIONS[id % ROTATIONS.length];
-}
-
-// ── 観測カード ──
-function ObsCard({
-  item,
-  onTagClick,
-}: {
-  item: Item;
-  onTagClick: (tag: string) => void;
-}) {
-  //ホバー状態の管理（カードを少し浮かせるエフェクトに使う）
-  const [hovered, setHovered] = useState(false);
-  const rot = randRot(item.id);
-
-  return (
-    <div
-      //ホバーで少し浮かせる＆回転させるスタイル
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: colors.card,
-        borderRadius: "12px",
-        overflow: "hidden",
-        border: `1px solid ${colors.border}`,
-        boxShadow: hovered
-          ? "0 8px 24px rgba(0,0,0,0.12)"
-          : "0 2px 6px rgba(0,0,0,0.07)",
-        transform: hovered
-          ? "rotate(0deg) translateY(-4px)"
-          : `rotate(${rot}deg)`,
-        transition: "transform 0.25s ease, box-shadow 0.25s ease",
-        cursor: "pointer",
-      }}
-    >
-      {/* 画像 or 絵文字 */}
-      <div
-        style={{
-          height: 130,
-          background: item.bg ?? "#E6E0D4",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-        }}
-      >
-        {item.img ? (
-          <img
-            src={item.img}
-            alt={item.title}
-            style={{ width: "100%", height: 130, objectFit: "cover" }}
-          />
-        ) : (
-          <span style={{ fontSize: 44 }}>{item.emoji}</span>
-        )}
-      </div>
-
-      <div style={{ padding: "12px 14px" }}>
-        <div
-          style={{
-            fontWeight: "bold",
-            fontSize: "13px",
-            color: colors.text,
-            marginBottom: "5px",
-            fontFamily: fonts.serif,
-          }}
-        >
-          {item.title}
-        </div>
-
-        {item.memo && (
-          <div
-            style={{
-              fontSize: "11px",
-              color: colors.subtext,
-              lineHeight: 1.6,
-              marginBottom: "10px",
-            }}
-          >
-            {item.memo}
-          </div>
-        )}
-
-        {/* タグ（クリックで絞り込み） */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "5px",
-            marginBottom: "8px",
-          }}
-        >
-          {item.tags.map((t) => (
-            <button
-              key={t}
-              onClick={() => onTagClick(t)}
-              style={{
-                fontSize: "10px",
-                padding: "2px 9px",
-                borderRadius: "9999px",
-                border: `1px solid ${colors.border}`,
-                background: colors.bg,
-                color: colors.subtext,
-                cursor: "pointer",
-                fontFamily: fonts.sans,
-              }}
-            >
-              #{t}
-            </button>
-          ))}
-        </div>
-
-        {/* 場所・日付 */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontSize: "10px",
-            color: colors.subtext,
-          }}
-        >
-          {item.loc && <span>📍 {item.loc}</span>}
-          {item.date && <span>{item.date}</span>}
-        </div>
-      </div>
-    </div>
   );
 }

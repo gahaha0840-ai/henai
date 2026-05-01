@@ -5,57 +5,52 @@ import { Link, useLocation } from 'react-router-dom';
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
 
-  // --- レイアウトの設計図（定数） ---
-  const LEFT_FULL = 220;    // 左サイドバーの通常幅
-  const LEFT_MINI = 72;     // 左サイドバーのアイコン表示時の幅
-  const RIGHT_WIDTH = 280;  // 右サイドバーの幅
-  const CENTER_MIN_SAFE = 500; // 中央がこれ以下になるときに自動でサイドバーを閉じる判定基準
+  // ── レイアウト定数 ──
+  const LEFT_FULL  = 220;
+  const LEFT_MINI  = 72;
+  const RIGHT_WIDTH = 280;
 
-  // --- サイドバーの表示状態管理 ---
-  const [isLeftCollapsed, setIsLeftCollapsed] = useState(false); // 左サイドバーの「縮小」状態
-  const [isRightOpen, setIsRightOpen] = useState(true);          // 右サイドバーの「表示/非表示」状態
+  // ── ブレークポイント ──
+  // 1300px 未満 → 左をアイコン化
+  // 1000px 未満 → 左アイコン化 ＋ 右を閉じる
+  const BREAK_COLLAPSE_LEFT  = 1300;
+  const BREAK_CLOSE_RIGHT    = 1000;
 
-  // --- レスポンシブ挙動（画面サイズに応じて自動で開閉） ---
+  const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
+  const [isRightOpen,     setIsRightOpen]     = useState(true);
+
   useEffect(() => {
-    const handleResize = () => {
+    const update = () => {
       const w = window.innerWidth;
-      // 1. 1000px未満なら：右を完全に閉じ、左もアイコン化する
-      if (w < 1000) {
-        setIsRightOpen(false);
-        setIsLeftCollapsed(true);
-      } 
-      // 2. 1300px未満なら：左だけをアイコン化する（中央の広さを優先）
-      else if (w < 1300) {
-        setIsLeftCollapsed(true);
-      }
+      setIsLeftCollapsed(w < BREAK_COLLAPSE_LEFT);
+      setIsRightOpen(w >= BREAK_CLOSE_RIGHT);
     };
-    window.addEventListener('resize', handleResize);
-    handleResize(); // 初回読み込み時にも判定を実行
-    return () => window.removeEventListener('resize', handleResize);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
   }, []);
 
-  // --- 配色設定 ---
+  // ── 配色 ──
   const colors = {
-    bg: '#F8F6F0',       // 紙のようなオフホワイト
-    text: '#3D3328',     // ダークブラウン
-    subtext: '#A39B8B',  // 控えめなグレー
-    accent: '#A68A61',   // アクセントのゴールド
-    border: '#E6E0D4',   // 境界線
-    card: '#FCFAEF',     // カードの背景色
+    bg:      '#F8F6F0',
+    text:    '#3D3328',
+    subtext: '#A39B8B',
+    accent:  '#A68A61',
+    border:  '#E6E0D4',
+    card:    '#FCFAEF',
   };
 
-  // --- フォント設定（ゴシック体メイン） ---
   const fonts = {
     serif: '"Noto Serif JP", "Hiragino Mincho ProN", serif',
-    sans: '"Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
+    sans:  '"Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
   };
 
-  // --- ナビゲーションメニューの定義 ---
+  // ── ナビゲーション定義 ──
   const navItems = [
-    { path: '/', label: 'ホーム', icon: '🏠' },
-    { path: '/photos', label: 'フォト', icon: '🖼️' },
-    { path: '/encyclopedia', label: '図鑑', icon: '📚' },
-    { path: '/observation', label: '観測', icon: '🔭' },
+    { path: '/',            label: 'ホーム', icon: '🏠' },
+    { path: '/photos',      label: 'フォト', icon: '🖼️' },
+    { path: '/zukan',       label: '図鑑',   icon: '📖' },
+    { path: '/observation', label: '観測',   icon: '🔭' },
   ];
 
   return (
@@ -66,87 +61,103 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       backgroundColor: colors.bg,
       color: colors.text,
       fontFamily: fonts.sans,
-      overflow: 'hidden',    // 全体の横スクロールを禁止
+      overflow: 'hidden',
       position: 'relative',
     }}>
-      
-      {/* 1. 左サイドバー（ナビゲーション） */}
+
+      {/* ── 1. 左サイドバー ── */}
       <aside style={{
         width: isLeftCollapsed ? `${LEFT_MINI}px` : `${LEFT_FULL}px`,
         borderRight: `1px solid ${colors.border}`,
         padding: '20px 8px',
         display: 'flex',
         flexDirection: 'column',
-        flexShrink: 0,       // メイン部分に押されても潰れないように固定
+        flexShrink: 0,
         backgroundColor: colors.bg,
-        transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // 開閉アニメーション
+        transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         zIndex: 40,
       }}>
-        {/* ロゴと開閉トグルボタン */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: isLeftCollapsed ? 'center' : 'space-between', 
+        {/* ロゴ */}
+        <Link to="/" style={{
+          display: 'flex',
+          justifyContent: isLeftCollapsed ? 'center' : 'flex-start',
           alignItems: 'center',
           marginBottom: '40px',
-          padding: '0 12px'
+          padding: '0 12px',
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+          textDecoration: 'none',
+          color: 'inherit',
         }}>
-          {!isLeftCollapsed && (
-            <span style={{ fontWeight: 'bold', fontSize: '20px', letterSpacing: '0.1em', fontFamily: fonts.serif }}>
+          {isLeftCollapsed ? (
+            // アイコン化時はロゴ文字の代わりに絵文字だけ表示
+            <span style={{ fontSize: '22px' }}>📚</span>
+          ) : (
+            <span style={{
+              fontWeight: 'bold',
+              fontSize: '20px',
+              letterSpacing: '0.1em',
+              fontFamily: fonts.serif,
+            }}>
               偏愛図鑑
             </span>
           )}
-          <button 
-            onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
-            style={{
-              background: 'none', border: `1px solid ${colors.border}`, borderRadius: '8px',
-              cursor: 'pointer', color: colors.subtext, padding: '4px 8px', fontSize: '12px',
-            }}
-          >
-            {isLeftCollapsed ? '▶' : '◀'}
-          </button>
-        </div>
+        </Link>
 
         {/* メニューリスト */}
         <nav style={{ flex: 1, padding: '0 4px' }}>
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
-              <Link key={item.path} to={item.path} style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: isLeftCollapsed ? 'center' : 'flex-start',
-                gap: isLeftCollapsed ? '0' : '12px',
-                padding: '12px 16px',
-                borderRadius: '12px',
-                textDecoration: 'none',
-                color: isActive ? colors.accent : colors.subtext,
-                backgroundColor: isActive ? 'rgba(166, 138, 97, 0.1)' : 'transparent',
-                transition: 'all 0.2s ease',
-                marginBottom: '8px',
-              }} title={item.label}>
-                <span style={{ fontSize: '22px' }}>{item.icon}</span>
-                {!isLeftCollapsed && <span style={{ fontWeight: '500' }}>{item.label}</span>}
+              <Link
+                key={item.path}
+                to={item.path}
+                title={item.label}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: isLeftCollapsed ? 'center' : 'flex-start',
+                  gap: isLeftCollapsed ? '0' : '12px',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  textDecoration: 'none',
+                  color: isActive ? colors.accent : colors.subtext,
+                  backgroundColor: isActive ? 'rgba(166, 138, 97, 0.1)' : 'transparent',
+                  transition: 'all 0.2s ease',
+                  marginBottom: '8px',
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <span style={{ fontSize: '22px', flexShrink: 0 }}>{item.icon}</span>
+                {!isLeftCollapsed && (
+                  <span style={{ fontWeight: '500' }}>{item.label}</span>
+                )}
               </Link>
             );
           })}
         </nav>
       </aside>
 
-      {/* 2. 中央メインコンテンツ（スクロール可能エリア） */}
+      {/* ── 2. 中央メインコンテンツ ── */}
       <main style={{
         flex: 1,
-        minWidth: 0,         // 子要素がつぶれないようにするためのFlex設定
-        overflowY: 'auto',   // 縦スクロールを有効に
+        minWidth: 0,
+        overflowY: 'auto',
         backgroundColor: 'rgba(255, 255, 255, 0.2)',
       }}>
-        <div style={{ padding: '40px clamp(20px, 5vw, 60px)', maxWidth: '1000px', margin: '0 auto' }}>
+        <div style={{
+          padding: '40px clamp(20px, 5vw, 60px)',
+          maxWidth: '1000px',
+          margin: '0 auto',
+        }}>
           {children}
         </div>
       </main>
 
-      {/* --- 右側復活ボタン（右サイドバーが閉じているときに絶対配置で表示） --- */}
+      {/* ── 右サイドバー復活ボタン（閉じているときのみ表示） ── */}
       {!isRightOpen && (
-        <button 
+        <button
           onClick={() => setIsRightOpen(true)}
           style={{
             position: 'absolute', top: '20px', right: '20px', zIndex: 100,
@@ -160,13 +171,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </button>
       )}
 
-      {/* 3. 右サイドバー（統計情報やAIサジェスト） */}
+      {/* ── 3. 右サイドバー ── */}
       <aside style={{
         width: isRightOpen ? `${RIGHT_WIDTH}px` : '0px',
         borderLeft: isRightOpen ? `1px solid ${colors.border}` : 'none',
         backgroundColor: 'rgba(248, 246, 240, 0.8)',
         flexShrink: 0,
-        overflow: 'hidden',  // 閉じている最中に中身がはみ出さないようにする
+        overflow: 'hidden',
         transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         display: 'flex',
         flexDirection: 'column',
@@ -174,12 +185,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       }}>
         <div style={{ minWidth: `${RIGHT_WIDTH}px`, height: '100%', position: 'relative' }}>
           {/* 閉じるボタン */}
-          <button 
+          <button
             onClick={() => setIsRightOpen(false)}
             style={{
               position: 'absolute', top: '20px', left: '16px',
               background: 'none', border: 'none', cursor: 'pointer',
-              color: colors.subtext, fontSize: '20px'
+              color: colors.subtext, fontSize: '20px',
             }}
           >
             ▶
@@ -188,17 +199,30 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           {/* コンテンツエリア */}
           <div style={{ padding: '70px 24px 24px' }}>
             <section style={{ marginBottom: '40px' }}>
-              <h4 style={{ color: colors.subtext, marginBottom: '20px', fontSize: '13px' }}>自分の傾向</h4>
+              <h4 style={{ color: colors.subtext, marginBottom: '20px', fontSize: '13px' }}>
+                自分の傾向
+              </h4>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                <span style={{ fontSize: '12px', padding: '6px 14px', backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '999px' }}>#キーボード</span>
-                <span style={{ fontSize: '12px', padding: '6px 14px', backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '999px' }}>#3Dプリンタ</span>
+                <span style={{ fontSize: '12px', padding: '6px 14px', backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '999px' }}>
+                  #キーボード
+                </span>
+                <span style={{ fontSize: '12px', padding: '6px 14px', backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '999px' }}>
+                  #3Dプリンタ
+                </span>
               </div>
             </section>
-            
+
             <section>
-              <h4 style={{ color: colors.subtext, marginBottom: '16px', fontSize: '13px' }}>AIによるサジェスト</h4>
-              <div style={{ fontSize: '12px', color: colors.subtext, backgroundColor: 'white', padding: '16px', borderRadius: '12px', border: `1px solid ${colors.border}`, lineHeight: '1.6' }}>
-                「自作キーボード」に興味があるなら、次は**真鍮プレートの加工**や**QMKファームウェア**のカスタマイズに挑戦してみるのはいかがでしょうか？
+              <h4 style={{ color: colors.subtext, marginBottom: '16px', fontSize: '13px' }}>
+                AIによるサジェスト
+              </h4>
+              <div style={{
+                fontSize: '12px', color: colors.subtext,
+                backgroundColor: 'white', padding: '16px',
+                borderRadius: '12px', border: `1px solid ${colors.border}`,
+                lineHeight: '1.6',
+              }}>
+                「自作キーボード」に興味があるなら、次は真鍮プレートの加工やQMKファームウェアのカスタマイズに挑戦してみるのはいかがでしょうか？
               </div>
             </section>
           </div>
