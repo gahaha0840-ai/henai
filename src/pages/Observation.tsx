@@ -5,14 +5,16 @@ import ItemCard from "../components/ItemCard.tsx";
 import TagChip from "../components/TagChip.tsx";
 
 const colors = {
-  bg: "#F8F6F0",
-  text: "#3D3328",
-  subtext: "#A39B8B",
+  bg:      "#F8F6F0",
+  text:    "#2A241E", 
+  subtext: "#5D544D", 
+  accent:  "#8B5E3C", 
+  line:    "rgba(139, 94, 60, 0.12)",
 };
 
 const fonts = {
   serif: '"Noto Serif JP", "Hiragino Mincho ProN", serif',
-  sans: '"Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
+  sans:  '"Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
 };
 
 export default function Observation() {
@@ -24,134 +26,131 @@ export default function Observation() {
     const loadItems = async () => {
       try {
         const res = await fetch("/data.json");
-        if (!res.ok) {
-          throw new Error(`データの取得に失敗しました (${res.status})`);
-        }
-        const data: PhotoMaterial[] = await res.json();
-        setItems(data);
+        if (!res.ok) throw new Error(`データの取得に失敗しました (${res.status})`);
+        const data = await res.json();
+        setItems(Array.isArray(data) ? data : data.photos || []);
       } catch (err) {
         console.error(err);
-        setError("データの読み込みに失敗しました。再読み込みしてください。");
+        setError("記録の同期に失敗しました。");
       }
     };
-
     loadItems();
   }, []);
 
   const allTags = [...new Set(items.flatMap((i) => i.tags ?? []))];
-  const displayed = selTag
-    ? items.filter((i) => i.tags?.includes(selTag))
-    : items;
+  const displayed = selTag ? items.filter((i) => i.tags?.includes(selTag)) : items;
 
   return (
-    <>
-      {/* ── ページヘッダー ── */}
-      <div style={{ marginBottom: "32px" }}>
-        <h1
-          style={{
-            fontSize: "28px",
+    <div style={{
+      position: "relative",
+      minHeight: "100%",
+      backgroundColor: colors.bg,
+      color: colors.text,
+      // 方眼の背景
+      backgroundImage: `linear-gradient(${colors.line} 1px, transparent 1px), linear-gradient(90deg, ${colors.line} 1px, transparent 1px)`,
+      backgroundSize: "32px 32px",
+      margin: "-40px -60px",
+      padding: "40px 60px",
+    }}>
+      
+      {/* ── ヘッダー ── */}
+      <header style={{ marginBottom: "48px" }}>
+        <div style={{ 
+          display: "inline-block",
+          borderLeft: `5px solid ${colors.accent}`,
+          paddingLeft: "20px",
+          marginBottom: "12px"
+        }}>
+          <h1 style={{
+            fontSize: "30px",
             fontWeight: "bold",
             fontFamily: fonts.serif,
-            color: colors.text,
-            marginBottom: "8px",
-            letterSpacing: "0.05em",
-          }}
-        >
-          🔭 観測
-        </h1>
-        <p style={{ fontSize: "13px", color: colors.subtext, lineHeight: 1.6 }}>
-          タグから世界を観測する。気になる断片を手がかりに、好きを深掘りしよう。
+            margin: 0,
+            letterSpacing: "0.15em",
+          }}>
+            🔭 観測台帳
+          </h1>
+        </div>
+        <p style={{ 
+          fontSize: "14px", 
+          color: colors.subtext, 
+          lineHeight: 1.8, 
+          maxWidth: "600px",
+          fontFamily: fonts.sans,
+        }}>
+          誰かの日常に紛れ込んだ「好き」の断片を、並列に観測し、新しい関心の座標を見つけるための場所です。
         </p>
-      </div>
+      </header>
 
       {/* ── タグフィルター ── */}
-      <div style={{ marginBottom: "24px" }}>
-        <div
-          style={{
-            fontSize: "11px",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: colors.subtext,
-            marginBottom: "10px",
-            fontWeight: "bold",
-          }}
-        >
-          タグで絞り込む
+      <div style={{ marginBottom: "40px" }}>
+        <div style={{ 
+          fontSize: "12px", 
+          color: colors.accent, 
+          marginBottom: "10px",
+          fontWeight: "bold",
+        }}>
+          分類 / 索引
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
           <TagChip
-            label="すべて"
+            label="すべて表示"
             active={selTag === null}
             onClick={() => setSelTag(null)}
             fontSize="12px"
-            padding="5px 14px"
           />
           {allTags.map((t) => (
             <TagChip
               key={t}
-              label={t}
+              label={`#${t}`}
               active={selTag === t}
               onClick={() => setSelTag(selTag === t ? null : t)}
               fontSize="12px"
-              padding="5px 14px"
             />
           ))}
         </div>
       </div>
 
-      {/* ── エラー表示 ── */}
-      {error ? (
-        <div
-          style={{
-            padding: "16px",
-            borderRadius: "12px",
-            background: "#ffecec",
-            color: "#991b1b",
-            marginBottom: "24px",
-          }}
-        >
-          {error}
-        </div>
-      ) : null}
-
-      {/* ── 件数表示 ── */}
-      <div
-        style={{
-          fontSize: "12px",
-          color: colors.subtext,
-          marginBottom: "20px",
-        }}
-      >
-        {selTag ? `「${selTag}」` : "すべて"} — {displayed.length} 件
+      {/* ── ステータスバー ── */}
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "space-between",
+        alignItems: "center",
+        borderBottom: `1px solid ${colors.line}`,
+        paddingBottom: "8px",
+        marginBottom: "32px",
+        fontSize: "12px",
+        color: colors.accent
+      }}>
+        <span>観測対象: {selTag ? `「${selTag}」` : "すべて"}</span>
+        <span>標本数: {displayed.length.toString().padStart(3, '0')} 件</span>
       </div>
 
       {/* ── カードグリッド ── */}
       {displayed.length === 0 ? (
-        <div
-          style={{
-            textAlign: "center",
-            padding: "60px 0",
-            color: colors.subtext,
-            fontSize: "13px",
-            fontStyle: "italic",
-          }}
-        >
-          このタグの記録はまだありません
+        <div style={{ textAlign: "center", padding: "100px 0", color: colors.subtext, fontFamily: fonts.serif }}>
+          該当する記録が見つかりませんでした。
         </div>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-            gap: "28px",
-            padding: "12px",
-          }}
-        >
-          {displayed.map((item) => (
-            <ItemCard key={item.id} item={item} onTagClick={setSelTag} />
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))",
+          gap: "40px",
+        }}>
+          {displayed.map((item, index) => (
+            <div 
+              key={item.id} 
+              style={{ 
+                position: "relative",
+                // わずかにランダムな傾きを付与
+                transform: `rotate(${(index % 4 - 1.5) * 0.8}deg)`,
+              }}
+            >
+              <ItemCard item={item} onTagClick={setSelTag} />
+            </div>
           ))}
         </div>
       )}
-    </>
+    </div>
   );
 }

@@ -72,6 +72,37 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       overflow: 'hidden',
       position: 'relative',
     }}>
+{/* ── 左サイドバー復活ボタン ── */}
+{/* isLeftCollapsed が true（最小化中）のときだけ、サイドバーの右外側に表示 */}
+{isLeftCollapsed && (
+  <button
+    onClick={() => setUserOverride(false)}
+    style={{
+      position: 'absolute',
+      // サイドバーの幅（LEFT_MINI = 72px）の少し右側に配置
+      left: `${LEFT_MINI + 16}px`, 
+      top: '20px',
+      zIndex: 100,
+      background: colors.card,
+      border: `1px solid ${colors.border}`,
+      borderRadius: '50%',
+      width: '40px',
+      height: '40px',
+      cursor: 'pointer',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+      color: colors.accent,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '16px',
+      transition: 'all 0.3s ease',
+    }}
+    onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
+    onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+  >
+    ▶
+  </button>
+)}
 
       {/* ── 1. 左サイドバー ── */}
       <aside style={{
