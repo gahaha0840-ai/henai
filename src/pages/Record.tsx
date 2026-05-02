@@ -279,7 +279,7 @@ function PhotoEditor() {
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            multiple
+            //multiple <-画像を複数選択できるようにする場合はこの属性を有効にしてください
             style={{ display: "none" }}
             onChange={(e) => addFiles(e.target.files)}
           />
