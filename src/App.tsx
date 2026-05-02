@@ -11,8 +11,10 @@ import Layout from "./components/Layout.tsx";
 import Home from "./pages/Home.tsx";
 import Photos from "./pages/Photos.tsx";
 import Observation from "./pages/Observation.tsx";
-import Zukan from "./pages/Zukan";
-import Record from "./pages/Record";
+import Zukan from "./pages/Zukan.tsx";
+import Record from "./pages/Record.tsx";
+import Account from "./pages/Account.tsx";
+import UserProfile from "./pages/UserProfile.tsx";
 
 function App() {
   return (
@@ -24,6 +26,8 @@ function App() {
           <Route path="/observation" element={<Observation />} />
           <Route path="/zukan" element={<Zukan />} />
           <Route path="/record" element={<Record />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/user/:userId" element={<UserProfile />} />
         </Routes>
       </Layout>
     </BrowserRouter>
