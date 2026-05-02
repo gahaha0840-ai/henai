@@ -771,12 +771,19 @@ function ContentPage({
                   userSelect: "none",
                 }}
               >
+                {/* 画像の位置と拡大率を反映 */}
                 <img
                   src={page.imageUrl}
                   alt=""
                   style={{
-                    transform: `translate(${page.imgX}px, ${page.imgY}px) scale(${page.imgScale})`,
-                    maxWidth: "none",
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: `
+                      translate(-50%, -50%)
+                      translate(${page.imgX}px, ${page.imgY}px)
+                      scale(${page.imgScale})
+                    `,
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
