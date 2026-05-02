@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 const colors = {
   bg: "#F8F6F0",
@@ -8,55 +8,61 @@ const colors = {
   border: "#E6E0D4",
   card: "#FCFAEF",
 };
-
 const fonts = {
   serif: '"Noto Serif JP", "Hiragino Mincho ProN", serif',
   sans: '"Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
-  mono: '"SF Mono", "Courier New", monospace',
 };
 
 type RecordType = "フォト" | "図鑑";
 
-// ── フォト用の型 ──
-interface UploadedImage {
-  id: number;
-  url: string;
-  file: File;
-}
-
 // ── 図鑑用の型 ──
+type PageLayout = "photo-text" | "text-only" | "photo-only";
 interface CoverData {
   title: string;
   imageUrl: string | null;
 }
 interface PageData {
   id: number;
+  layout: PageLayout;
   imageUrl: string | null;
+  imgX: number;
+  imgY: number;
+  imgScale: number; // 画像位置・拡大率
   text: string;
 }
-type ZukanFileTarget = { kind: "cover" } | { kind: "page"; id: number };
+type ZukanTarget = { kind: "cover" } | { kind: "page"; id: number };
 
+function makePage(id: number): PageData {
+  return {
+    id,
+    layout: "photo-text",
+    imageUrl: null,
+    imgX: 0,
+    imgY: 0,
+    imgScale: 1,
+    text: "",
+  };
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Record（切り替え親）
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 export default function Record() {
   const [recordType, setRecordType] = useState<RecordType>("フォト");
-
   return (
     <div style={{ fontFamily: fonts.sans, color: colors.text }}>
-      {/* ── ページヘッダー ── */}
       <div style={{ marginBottom: "24px" }}>
         <h1
           style={{
             fontFamily: fonts.serif,
             fontSize: "26px",
             fontWeight: "bold",
-            color: colors.text,
             letterSpacing: "0.05em",
             marginBottom: "16px",
           }}
         >
           ✏️ 記録
         </h1>
-
-        {/* タイプ切り替え */}
         <div
           style={{
             display: "inline-flex",
@@ -89,86 +95,43 @@ export default function Record() {
           ))}
         </div>
       </div>
-
-      {/* ── 各エディター ── */}
       {recordType === "フォト" ? <PhotoEditor /> : <ZukanEditor />}
     </div>
   );
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// フォトエディター
+// フォトエディター（1枚のみ）
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function PhotoEditor() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [images, setImages] = useState<UploadedImage[]>([]);
-  const [selectedImg, setSelectedImg] = useState<UploadedImage | null>(null);
-  const [aiTags] = useState([
-    "#自作",
-    "#ガジェット",
-    "#記録",
-    "#こだわり",
-    "#デザイン",
-  ]);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [saved, setSaved] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const idRef = useRef(0);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  // 画像投稿追加処理
-  /* 複数枚追加
-  const addFiles = (files: FileList | null) => {
-    if (!files) return;
-    const newImages: UploadedImage[] = Array.from(files)
-      .filter((f) => f.type.startsWith("image/"))
-      .map((file) => ({
-        id: ++idRef.current,
-        url: URL.createObjectURL(file),
-        file,
-      }));
-    setImages((prev) => [...prev, ...newImages]);
-    if (!selectedImg && newImages.length > 0) setSelectedImg(newImages[0]);
-  };
-*/
-  // 単一枚追加
-  const addFiles = (files: FileList | null) => {
-    if (!files) return;
-    const file = Array.from(files).find((f) => f.type.startsWith("image/"));
-    if (!file) return;
-    const newImage: UploadedImage = {
-      id: ++idRef.current,
-      url: URL.createObjectURL(file),
-      file,
-    };
-    setImages([newImage]); // ← 上書きにする
-    setSelectedImg(newImage); // ← 常に選択状態に
+  const loadFile = (file: File | undefined) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    setImageUrl(URL.createObjectURL(file));
   };
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    addFiles(e.dataTransfer.files);
+    loadFile(e.dataTransfer.files[0]);
   }, []);
-
-  const removeImage = (id: number) => {
-    setImages((prev) => {
-      const next = prev.filter((img) => img.id !== id);
-      if (selectedImg?.id === id) setSelectedImg(next[0] ?? null);
-      return next;
-    });
-  };
 
   return (
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "1fr minmax(240px,320px)",
+        gridTemplateColumns: "1fr minmax(240px,300px)",
         gap: "24px",
         alignItems: "start",
       }}
     >
-      {/* 左カラム */}
+      {/* 左 */}
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         <Field label="タイトル">
           <input
@@ -179,9 +142,9 @@ function PhotoEditor() {
           />
         </Field>
 
-        <Field label="画像">
+        <Field label="画像（1枚）">
           <div
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => !imageUrl && fileRef.current?.click()}
             onDrop={onDrop}
             onDragOver={(e) => {
               e.preventDefault();
@@ -189,115 +152,74 @@ function PhotoEditor() {
             }}
             onDragLeave={() => setIsDragging(false)}
             style={{
-              minHeight: "220px",
+              height: "260px",
               borderRadius: "12px",
-              padding: "20px",
               border: `1.5px dashed ${isDragging ? colors.accent : colors.border}`,
               background: isDragging ? "rgba(166,138,97,0.05)" : colors.card,
               display: "flex",
-              flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              cursor: "pointer",
+              cursor: imageUrl ? "default" : "pointer",
+              overflow: "hidden",
+              position: "relative",
               transition: "all 0.15s",
-              gap: "12px",
             }}
           >
-            {images.length === 0 ? (
+            {imageUrl ? (
               <>
-                <span style={{ fontSize: "32px", opacity: 0.4 }}>🖼️</span>
-                <span style={{ fontSize: "13px", color: colors.subtext }}>
-                  ここに画像をアップロード
-                </span>
-                <span style={{ fontSize: "11px", color: colors.border }}>
-                  クリックまたはドラッグ＆ドロップ
-                </span>
+                <img
+                  src={imageUrl}
+                  alt=""
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setImageUrl(null);
+                  }}
+                  style={{
+                    position: "absolute",
+                    top: "10px",
+                    right: "10px",
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "50%",
+                    background: "rgba(0,0,0,0.5)",
+                    border: "none",
+                    color: "#fff",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                  }}
+                >
+                  ×
+                </button>
               </>
             ) : (
               <div
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill,minmax(90px,1fr))",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
                   gap: "10px",
-                  width: "100%",
+                  opacity: 0.45,
                 }}
               >
-                {images.map((img) => (
-                  <div
-                    key={img.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedImg(img);
-                    }}
-                    style={{
-                      position: "relative",
-                      aspectRatio: "1",
-                      borderRadius: "8px",
-                      overflow: "hidden",
-                      border: `2px solid ${selectedImg?.id === img.id ? colors.accent : "transparent"}`,
-                      cursor: "pointer",
-                      transition: "border-color 0.15s",
-                    }}
-                  >
-                    <img
-                      src={img.url}
-                      alt=""
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeImage(img.id);
-                      }}
-                      style={{
-                        position: "absolute",
-                        top: "4px",
-                        right: "4px",
-                        width: "20px",
-                        height: "20px",
-                        borderRadius: "50%",
-                        background: "rgba(0,0,0,0.5)",
-                        border: "none",
-                        color: "#fff",
-                        fontSize: "11px",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                <div
-                  style={{
-                    aspectRatio: "1",
-                    borderRadius: "8px",
-                    border: `1.5px dashed ${colors.border}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: colors.subtext,
-                    fontSize: "22px",
-                  }}
-                >
-                  +
-                </div>
+                <span style={{ fontSize: "36px" }}>🖼️</span>
+                <span style={{ fontSize: "13px", color: colors.subtext }}>
+                  画像を追加（1枚）
+                </span>
+                <span style={{ fontSize: "11px", color: colors.border }}>
+                  クリックまたはドラッグ
+                </span>
               </div>
             )}
           </div>
           <input
-            ref={fileInputRef}
+            ref={fileRef}
             type="file"
             accept="image/*"
-            //multiple <-画像を複数選択できるようにする場合はこの属性を有効にしてください
             style={{ display: "none" }}
-            onChange={(e) => addFiles(e.target.files)}
+            onChange={(e) => loadFile(e.target.files?.[0])}
           />
         </Field>
 
@@ -312,7 +234,6 @@ function PhotoEditor() {
             />
             <button
               onClick={() => {
-                console.log({ title, content, images });
                 setSaved(true);
                 setTimeout(() => setSaved(false), 2000);
               }}
@@ -336,8 +257,8 @@ function PhotoEditor() {
         </Field>
       </div>
 
-      {/* 右カラム */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      {/* 右：プレビュー */}
+      <div>
         <Field label="プレビュー" badge>
           <div
             style={{
@@ -350,7 +271,7 @@ function PhotoEditor() {
             <div
               style={{
                 width: "100%",
-                aspectRatio: "16/9",
+                aspectRatio: "4/3",
                 background: colors.border,
                 display: "flex",
                 alignItems: "center",
@@ -358,9 +279,9 @@ function PhotoEditor() {
                 overflow: "hidden",
               }}
             >
-              {selectedImg ? (
+              {imageUrl ? (
                 <img
-                  src={selectedImg.url}
+                  src={imageUrl}
                   alt=""
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
@@ -368,41 +289,6 @@ function PhotoEditor() {
                 <span style={{ fontSize: "28px", opacity: 0.3 }}>🖼️</span>
               )}
             </div>
-            {images.length > 0 && (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3,1fr)",
-                  gap: "2px",
-                  padding: "2px",
-                  background: colors.border,
-                }}
-              >
-                {images.slice(0, 3).map((img) => (
-                  <div
-                    key={img.id}
-                    onClick={() => setSelectedImg(img)}
-                    style={{
-                      aspectRatio: "1",
-                      overflow: "hidden",
-                      cursor: "pointer",
-                      opacity: selectedImg?.id === img.id ? 1 : 0.6,
-                      transition: "opacity 0.15s",
-                    }}
-                  >
-                    <img
-                      src={img.url}
-                      alt=""
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
             <div style={{ padding: "10px 12px 14px" }}>
               <div
                 style={{
@@ -410,8 +296,8 @@ function PhotoEditor() {
                   fontWeight: "bold",
                   fontFamily: fonts.serif,
                   color: colors.text,
-                  minHeight: "18px",
                   opacity: title ? 1 : 0.3,
+                  marginBottom: "4px",
                 }}
               >
                 {title || "タイトル"}
@@ -423,7 +309,7 @@ function PhotoEditor() {
                     color: colors.subtext,
                     lineHeight: 1.5,
                     display: "-webkit-box",
-                    WebkitLineClamp: 2,
+                    WebkitLineClamp: 3,
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
                   }}
@@ -432,37 +318,6 @@ function PhotoEditor() {
                 </div>
               )}
             </div>
-          </div>
-        </Field>
-
-        <Field label="AIタグ" badge>
-          <div
-            style={{
-              borderRadius: "12px",
-              border: `1px solid ${colors.border}`,
-              background: colors.card,
-              padding: "14px",
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "8px",
-              minHeight: "60px",
-            }}
-          >
-            {aiTags.map((tag) => (
-              <span
-                key={tag}
-                style={{
-                  fontSize: "11px",
-                  padding: "4px 12px",
-                  borderRadius: "9999px",
-                  background: "rgba(166,138,97,0.12)",
-                  color: colors.accent,
-                  border: "1px solid rgba(166,138,97,0.25)",
-                }}
-              >
-                {tag}
-              </span>
-            ))}
           </div>
         </Field>
       </div>
@@ -475,59 +330,57 @@ function PhotoEditor() {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function ZukanEditor() {
   const [cover, setCover] = useState<CoverData>({ title: "", imageUrl: null });
-  const [pages, setPages] = useState<PageData[]>([
-    { id: 1, imageUrl: null, text: "" },
-  ]);
+  const [pages, setPages] = useState<PageData[]>([makePage(1)]);
   const [spread, setSpread] = useState(0);
   const [saved, setSaved] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const pendingTarget = useRef<ZukanFileTarget | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const targetRef = useRef<ZukanTarget | null>(null);
   const idRef = useRef(2);
 
   const totalSpreads = Math.ceil((pages.length + 1) / 2);
   const leftPage = spread === 0 ? null : (pages[spread * 2 - 2] ?? null);
-  const rightPage = spread === 0 ? pages[0] : (pages[spread * 2 - 1] ?? null);
+  const rightPage =
+    spread === 0 ? (pages[0] ?? null) : (pages[spread * 2 - 1] ?? null);
 
-  const openFilePicker = (target: ZukanFileTarget) => {
-    pendingTarget.current = target;
-    fileInputRef.current?.click();
+  const openFile = (t: ZukanTarget) => {
+    targetRef.current = t;
+    fileRef.current?.click();
   };
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !pendingTarget.current) return;
+    if (!file || !targetRef.current) return;
     const url = URL.createObjectURL(file);
-    const t = pendingTarget.current;
+    const t = targetRef.current;
     if (t.kind === "cover") setCover((c) => ({ ...c, imageUrl: url }));
     else
       setPages((ps) =>
-        ps.map((p) => (p.id === t.id ? { ...p, imageUrl: url } : p)),
+        ps.map((p) =>
+          p.id === t.id
+            ? { ...p, imageUrl: url, imgX: 0, imgY: 0, imgScale: 1 }
+            : p,
+        ),
       );
     e.target.value = "";
   };
 
-  const addPage = () =>
-    setPages((ps) => [
-      ...ps,
-      { id: idRef.current++, imageUrl: null, text: "" },
-    ]);
+  const updatePage = (id: number, patch: Partial<PageData>) =>
+    setPages((ps) => ps.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+
+  const addPage = () => {
+    setPages((ps) => [...ps, makePage(idRef.current++)]);
+  };
 
   const removePage = (id: number) => {
     setPages((ps) => {
       const next = ps.filter((p) => p.id !== id);
-      return next.length === 0
-        ? [{ id: idRef.current++, imageUrl: null, text: "" }]
-        : next;
+      return next.length === 0 ? [makePage(idRef.current++)] : next;
     });
     setSpread((s) => Math.max(0, s - 1));
   };
 
-  const updateText = (id: number, text: string) =>
-    setPages((ps) => ps.map((p) => (p.id === id ? { ...p, text } : p)));
-
   return (
     <div>
-      {/* 保存ボタン */}
       <div
         style={{
           display: "flex",
@@ -537,7 +390,6 @@ function ZukanEditor() {
       >
         <button
           onClick={() => {
-            console.log({ cover, pages });
             setSaved(true);
             setTimeout(() => setSaved(false), 2000);
           }}
@@ -556,7 +408,7 @@ function ZukanEditor() {
         </button>
       </div>
 
-      {/* 見開きエディター */}
+      {/* 見開き */}
       <div
         style={{
           background: "#2a1f14",
@@ -582,42 +434,40 @@ function ZukanEditor() {
             style={{
               background: "#fdfaf3",
               borderRight: "2px solid #e8e0d0",
-              minHeight: "440px",
+              minHeight: "460px",
             }}
           >
             {spread === 0 ? (
               <CoverPage
                 cover={cover}
                 onTitleChange={(t) => setCover((c) => ({ ...c, title: t }))}
-                onImageClick={() => openFilePicker({ kind: "cover" })}
+                onImageClick={() => openFile({ kind: "cover" })}
               />
             ) : leftPage ? (
               <ContentPage
                 page={leftPage}
-                onImageClick={() =>
-                  openFilePicker({ kind: "page", id: leftPage.id })
-                }
-                onTextChange={(t) => updateText(leftPage.id, t)}
+                onImageClick={() => openFile({ kind: "page", id: leftPage.id })}
+                onUpdate={(patch) => updatePage(leftPage.id, patch)}
                 onRemove={() => removePage(leftPage.id)}
               />
             ) : (
-              <EmptyPage />
+              <EmptySlot />
             )}
           </div>
 
           {/* 右ページ */}
-          <div style={{ background: "#faf6ef", minHeight: "440px" }}>
+          <div style={{ background: "#faf6ef", minHeight: "460px" }}>
             {rightPage ? (
               <ContentPage
                 page={rightPage}
                 onImageClick={() =>
-                  openFilePicker({ kind: "page", id: rightPage.id })
+                  openFile({ kind: "page", id: rightPage.id })
                 }
-                onTextChange={(t) => updateText(rightPage.id, t)}
+                onUpdate={(patch) => updatePage(rightPage.id, patch)}
                 onRemove={() => removePage(rightPage.id)}
               />
             ) : (
-              <EmptyPage onAdd={addPage} />
+              <EmptySlot onAdd={addPage} />
             )}
           </div>
         </div>
@@ -640,9 +490,9 @@ function ZukanEditor() {
           </NavBtn>
           <span
             style={{
-              color: "rgba(255,253,245,0.5)",
+              color: "rgba(255,253,245,0.45)",
               fontSize: "12px",
-              minWidth: "100px",
+              minWidth: "110px",
               textAlign: "center",
             }}
           >
@@ -672,7 +522,7 @@ function ZukanEditor() {
         </div>
       </div>
 
-      {/* サムネイル一覧 */}
+      {/* サムネイル */}
       <div
         style={{ fontSize: "11px", color: colors.subtext, marginBottom: "8px" }}
       >
@@ -704,7 +554,7 @@ function ZukanEditor() {
       </div>
 
       <input
-        ref={fileInputRef}
+        ref={fileRef}
         type="file"
         accept="image/*"
         style={{ display: "none" }}
@@ -731,7 +581,7 @@ function CoverPage({
         style={{
           flex: 1,
           background: colors.border,
-          minHeight: "300px",
+          minHeight: "340px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -772,18 +622,70 @@ function CoverPage({
   );
 }
 
-// ── コンテンツページ ──
+// ── コンテンツページ（レイアウト切替 + 画像操作） ──
 function ContentPage({
   page,
   onImageClick,
-  onTextChange,
+  onUpdate,
   onRemove,
 }: {
   page: PageData;
   onImageClick: () => void;
-  onTextChange: (t: string) => void;
+  onUpdate: (patch: Partial<PageData>) => void;
   onRemove: () => void;
 }) {
+  // ドラッグ状態
+  const dragStart = useRef<{
+    mx: number;
+    my: number;
+    ox: number;
+    oy: number;
+  } | null>(null);
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    dragStart.current = {
+      mx: e.clientX,
+      my: e.clientY,
+      ox: page.imgX,
+      oy: page.imgY,
+    };
+  };
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!dragStart.current) return;
+      onUpdate({
+        imgX: dragStart.current.ox + (e.clientX - dragStart.current.mx),
+        imgY: dragStart.current.oy + (e.clientY - dragStart.current.my),
+      });
+    };
+    const onUp = () => {
+      dragStart.current = null;
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [page.imgX, page.imgY]);
+
+  const onWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const next = Math.min(3, Math.max(0.5, page.imgScale - e.deltaY * 0.001));
+    onUpdate({ imgScale: next });
+  };
+
+  const layouts: { value: PageLayout; label: string }[] = [
+    { value: "photo-text", label: "📷＋📝" },
+    { value: "photo-only", label: "📷のみ" },
+    { value: "text-only", label: "📝のみ" },
+  ];
+
+  const showPhoto = page.layout !== "text-only";
+  const showText = page.layout !== "photo-only";
+
   return (
     <div
       style={{
@@ -793,75 +695,177 @@ function ContentPage({
         position: "relative",
       }}
     >
-      <button
-        onClick={onRemove}
-        style={{
-          position: "absolute",
-          top: "8px",
-          right: "8px",
-          zIndex: 2,
-          width: "22px",
-          height: "22px",
-          borderRadius: "50%",
-          border: `1px solid ${colors.border}`,
-          background: colors.card,
-          color: colors.subtext,
-          fontSize: "12px",
-          cursor: "pointer",
-        }}
-      >
-        ×
-      </button>
+      {/* ツールバー */}
       <div
-        onClick={onImageClick}
         style={{
-          height: "260px",
-          background: colors.border,
-          flexShrink: 0,
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          overflow: "hidden",
+          gap: "6px",
+          padding: "6px 10px",
+          borderBottom: "1px solid #e8e0d0",
+          background: "#fdfaf3",
+          flexShrink: 0,
         }}
       >
-        {page.imageUrl ? (
-          <img
-            src={page.imageUrl}
-            alt=""
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        ) : (
-          <ImgPlaceholder label="写真を追加" />
-        )}
+        {layouts.map((l) => (
+          <button
+            key={l.value}
+            onClick={() => onUpdate({ layout: l.value })}
+            style={{
+              fontSize: "10px",
+              padding: "3px 8px",
+              borderRadius: "4px",
+              border: `1px solid ${page.layout === l.value ? colors.accent : colors.border}`,
+              background:
+                page.layout === l.value
+                  ? "rgba(166,138,97,0.1)"
+                  : "transparent",
+              color: page.layout === l.value ? colors.accent : colors.subtext,
+              cursor: "pointer",
+            }}
+          >
+            {l.label}
+          </button>
+        ))}
+        <div style={{ flex: 1 }} />
+        <button
+          onClick={onRemove}
+          style={{
+            width: "20px",
+            height: "20px",
+            borderRadius: "50%",
+            border: `1px solid ${colors.border}`,
+            background: "transparent",
+            color: colors.subtext,
+            fontSize: "11px",
+            cursor: "pointer",
+          }}
+        >
+          ×
+        </button>
       </div>
-      <textarea
-        value={page.text}
-        onChange={(e) => onTextChange(e.target.value)}
-        placeholder="このページの記録を書く…"
-        style={{
-          flex: 1,
-          border: "none",
-          outline: "none",
-          background: "transparent",
-          resize: "none",
-          fontFamily: fonts.serif,
-          fontSize: "13px",
-          color: colors.text,
-          lineHeight: 1.8,
-          padding: "14px 18px",
-        }}
-      />
+
+      {/* 写真エリア */}
+      {showPhoto && (
+        <div
+          onWheel={onWheel}
+          style={{
+            height: showText ? "240px" : "100%",
+            flexShrink: 0,
+            background: colors.border,
+            overflow: "hidden",
+            position: "relative",
+            cursor: page.imageUrl ? "grab" : "pointer",
+          }}
+        >
+          {page.imageUrl ? (
+            <>
+              <div
+                onMouseDown={onMouseDown}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  userSelect: "none",
+                }}
+              >
+                <img
+                  src={page.imageUrl}
+                  alt=""
+                  style={{
+                    transform: `translate(${page.imgX}px, ${page.imgY}px) scale(${page.imgScale})`,
+                    maxWidth: "none",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    pointerEvents: "none",
+                    transformOrigin: "center center",
+                  }}
+                />
+              </div>
+              {/* 操作ヒント */}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "6px",
+                  right: "8px",
+                  fontSize: "9px",
+                  color: "rgba(255,255,255,0.6)",
+                  background: "rgba(0,0,0,0.3)",
+                  padding: "2px 7px",
+                  borderRadius: "4px",
+                }}
+              >
+                ドラッグで移動・スクロールで拡縮
+              </div>
+              {/* 画像入れ替えボタン */}
+              <button
+                onClick={onImageClick}
+                style={{
+                  position: "absolute",
+                  top: "8px",
+                  right: "8px",
+                  fontSize: "10px",
+                  padding: "3px 10px",
+                  borderRadius: "4px",
+                  background: "rgba(0,0,0,0.45)",
+                  border: "none",
+                  color: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                入れ替え
+              </button>
+            </>
+          ) : (
+            <div
+              onClick={onImageClick}
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ImgPlaceholder label="写真を追加" />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* テキストエリア */}
+      {showText && (
+        <textarea
+          value={page.text}
+          onChange={(e) => onUpdate({ text: e.target.value })}
+          placeholder="このページの記録を書く…"
+          style={{
+            flex: 1,
+            border: "none",
+            outline: "none",
+            background: "transparent",
+            resize: "none",
+            fontFamily: fonts.serif,
+            fontSize: "13px",
+            color: colors.text,
+            lineHeight: 1.8,
+            padding: "14px 18px",
+          }}
+        />
+      )}
     </div>
   );
 }
 
-// ── 空ページ ──
-function EmptyPage({ onAdd }: { onAdd?: () => void }) {
+// ── 空スロット ──
+function EmptySlot({ onAdd }: { onAdd?: () => void }) {
   return (
     <div
       style={{
-        height: "440px",
+        height: "460px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -891,7 +895,7 @@ function EmptyPage({ onAdd }: { onAdd?: () => void }) {
   );
 }
 
-// ── 共通小コンポーネント ──
+// ── 共通 ──
 function ImgPlaceholder({ label }: { label: string }) {
   return (
     <div
@@ -908,7 +912,6 @@ function ImgPlaceholder({ label }: { label: string }) {
     </div>
   );
 }
-
 function NavBtn({
   disabled,
   onClick,
@@ -937,7 +940,6 @@ function NavBtn({
     </button>
   );
 }
-
 function Thumb({
   label,
   imageUrl,
@@ -991,7 +993,6 @@ function Thumb({
     </div>
   );
 }
-
 function Field({
   label,
   badge,
@@ -1034,7 +1035,6 @@ function Field({
     </div>
   );
 }
-
 const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "10px 14px",
