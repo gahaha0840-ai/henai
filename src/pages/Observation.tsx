@@ -28,7 +28,7 @@ export default function Observation() {
         const res = await fetch("/data.json");
         if (!res.ok) throw new Error(`データの取得に失敗しました (${res.status})`);
         const data = await res.json();
-        setItems(Array.isArray(data) ? data : data.photos || []);
+        setItems(data.photos || []);
       } catch (err) {
         console.error(err);
         setError("記録の同期に失敗しました。");

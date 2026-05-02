@@ -19,43 +19,6 @@ const fonts = {
 // 📝 【開発用設定】true にするとAPIから取得、false にするとダミーデータを使用
 const USE_REAL_API = false;
 
-const DUMMY_PHOTOS: PhotoMaterial[] = [
-  { id: 1, userId: "u1", imageUrl: "https://placehold.co/600x600/1A1A24/E6E0D4?text=Night+Sky", title: "夜空",       tags: ["星空", "静寂"],      aiTags: ["#星空", "#静寂"],      createdAt: "2026-04-28T23:15:00Z" },
-  { id: 2, userId: "u1", imageUrl: "https://placehold.co/600x600/E6E0D4/3D3328?text=Corne+v4",  title: "自作キーボード", tags: ["ガジェット", "自作"],  aiTags: ["#ガジェット", "#自作"],  createdAt: "2026-04-25T14:30:00Z" },
-  { id: 3, userId: "u1", imageUrl: "https://placehold.co/600x600/A68A61/FCFAEF?text=VR+HMD",    title: "HMDテスト",   tags: ["VR", "プロトタイプ"], aiTags: ["#VR", "#プロトタイプ"], createdAt: "2026-04-22T10:00:00Z" },
-  { id: 4, userId: "u1", imageUrl: "https://placehold.co/600x600/2E3440/D8DEE9?text=3D+Print",  title: "3Dプリント",  tags: ["造形", "試作"],       aiTags: ["#造形", "#試作"],       createdAt: "2026-04-20T16:45:00Z" },
-];
-
-const DUMMY_COLLECTIONS: Collection[] = [
-  {
-    id: "c1", authorId: "u1",
-    title: "Corne v4 スイッチホルダー",
-    thumbnailUrl: "https://placehold.co/600x400/E6E0D4/3D3328?text=Corne+v4",
-    content: "Bambu Lab A1 miniとFreeCADで設計したオリジナルパーツ。試行錯誤の末に寸法がピッタリ合った瞬間の快感は異常。キーボード沼はまだまだ深い。",
-    imageUrls: ["https://placehold.co/600x400/E6E0D4/3D3328?text=Corne+v4"],
-    aiTags: ["#3Dプリンタ", "#自作キーボード", "#設計"],
-    createdAt: "2026-04-28T10:00:00Z",
-  },
-  {
-    id: "c2", authorId: "u1",
-    title: "星空撮影の記録",
-    thumbnailUrl: "https://placehold.co/600x400/1A1A24/E6E0D4?text=Night+Sky",
-    content: "Canon G9 Xを使って深夜に撮影。コンパクト機でもマニュアル設定でここまで綺麗に星空が撮れることに感動している。次はレンズヒーターを導入したい。",
-    imageUrls: ["https://placehold.co/600x400/1A1A24/E6E0D4?text=Night+Sky"],
-    aiTags: ["#写真", "#夜景", "#カメラ"],
-    createdAt: "2026-04-25T02:30:00Z",
-  },
-  {
-    id: "c3", authorId: "u1",
-    title: "VR UI プロトタイピング",
-    thumbnailUrl: "https://placehold.co/600x400/A68A61/FCFAEF?text=Figma+UI",
-    content: "HMDのトラッキングデータを活かした新しい操作感をFigmaで検証中。視線と手の動きの連動が鍵になりそう。空間UIの正解を探す日々。",
-    imageUrls: ["https://placehold.co/600x400/A68A61/FCFAEF?text=Figma+UI"],
-    aiTags: ["#UIUX", "#VR", "#Figma"],
-    createdAt: "2026-04-15T18:20:00Z",
-  },
-];
-
 export default function Home() {
   const [photos, setPhotos] = useState<PhotoMaterial[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -81,9 +44,10 @@ export default function Home() {
           setCollections(await collectionsRes.json());
         } else {
           // 🛠️ 開発モード：ネットワーク遅延を擬似的に再現
-          await new Promise((resolve) => setTimeout(resolve, 800));
-          setPhotos(DUMMY_PHOTOS);
-          setCollections(DUMMY_COLLECTIONS);
+          const res = await fetch("/data.json");
+          const data = await res.json();
+          setPhotos(data.photos || []);
+          setCollections(data.collections || []);
         }
       } catch (err) {
         console.error("データの取得に失敗しました", err);
