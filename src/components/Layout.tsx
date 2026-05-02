@@ -52,6 +52,15 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { path: '/record',      label: '記録する', icon: '✏️' },
   ];
 
+  const aiTitles = [
+    "AIによる称号",
+    "AIによる称号",
+    "AIによる称号",
+  ];
+
+  // ダミーのプロフィール画像URL（後でSupabase等のデータに置き換え）
+  const profileImageUrl = ""; 
+
   return (
     <div style={{
       display: 'flex',
@@ -88,52 +97,20 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           height: '44px',
         }}>
           {isLeftCollapsed ? (
-            /* 最小化時：📚アイコンのみ */
-            <Link to="/" style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textDecoration: 'none',
-            }}>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
               <span style={{ fontSize: '22px' }}>📚</span>
             </Link>
           ) : (
-            /* 展開時：ロゴ＋閉じるボタン */
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              width: '100%',
-              padding: '0 8px',
-            }}>
-              <Link to="/" style={{
-                display: 'flex',
-                alignItems: 'center',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap',
-                textDecoration: 'none',
-                color: 'inherit',
-              }}>
-                <span style={{
-                  fontWeight: 'bold',
-                  fontSize: '20px',
-                  letterSpacing: '0.1em',
-                  fontFamily: fonts.serif,
-                }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '0 8px' }}>
+              <Link to="/" style={{ display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap', textDecoration: 'none', color: 'inherit' }}>
+                <span style={{ fontWeight: 'bold', fontSize: '20px', letterSpacing: '0.1em', fontFamily: fonts.serif }}>
                   偏愛図鑑
                 </span>
               </Link>
               <button
                 onClick={() => setUserOverride(true)}
                 title="サイドバーを閉じる"
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: colors.subtext,
-                  fontSize: '20px',
-                  flexShrink: 0,
-                }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.subtext, fontSize: '20px', flexShrink: 0 }}
               >
                 ◀
               </button>
@@ -166,43 +143,94 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 }}
               >
                 <span style={{ fontSize: '22px', flexShrink: 0 }}>{item.icon}</span>
-                {!isLeftCollapsed && (
-                  <span style={{ fontWeight: '500' }}>{item.label}</span>
-                )}
+                {!isLeftCollapsed && <span style={{ fontWeight: '500' }}>{item.label}</span>}
               </Link>
             );
           })}
         </nav>
-      </aside>
 
-      {/* ── 最小化時の展開ボタン（中央コンテンツ側の左上） ── */}
-      {isLeftCollapsed && (
-        <button
-          onClick={() => setUserOverride(false)}
-          title="サイドバーを開く"
-          style={{
-            position: 'absolute',
-            top: '20px',
-            left: `${LEFT_MINI + 16}px`,
-            zIndex: 100,
-            background: colors.card,
-            border: `1px solid ${colors.border}`,
-            borderRadius: '50%',
-            width: '44px',
-            height: '44px',
-            cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-            color: colors.accent,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '18px',
-            transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          }}
-        >
-          ▶
-        </button>
-      )}
+        {/* ── アカウント表示部分 ── */}
+        <div style={{
+          padding: '20px 8px',
+          borderTop: `1px solid ${colors.border}`,
+          marginTop: '20px',
+        }}>
+          {/* Linkで囲って遷移可能に */}
+          <Link 
+            to="/account" 
+            style={{ 
+              textDecoration: 'none', 
+              color: 'inherit',
+              display: 'flex',
+              flexDirection: 'column',
+              cursor: 'pointer'
+            }}
+          >
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: isLeftCollapsed ? 'center' : 'flex-start',
+              gap: '12px',
+              marginBottom: isLeftCollapsed ? '0' : '16px',
+              transition: 'opacity 0.2s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.7')}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+            >
+              {/* プロフィール画像 */}
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                backgroundColor: colors.border,
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                {profileImageUrl ? (
+                  <img 
+                    src={profileImageUrl} 
+                    alt="Profile" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                  />
+                ) : (
+                  <span style={{ fontSize: '20px', color: colors.subtext }}>👤</span>
+                )}
+              </div>
+
+              {!isLeftCollapsed && (
+                <div style={{ overflow: 'hidden' }}>
+                  <div style={{
+                    fontWeight: 'bold',
+                    fontSize: '16px',
+                    color: colors.text,
+                    borderBottom: `1px solid ${colors.accent}`,
+                    paddingBottom: '2px',
+                    display: 'inline-block',
+                    minWidth: '80px',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    NAME
+                  </div>
+                </div>
+              )}
+            </div>
+          </Link>
+
+          {/* 称号リスト（クリック範囲外にするか、ここも含めてLinkにするかはお好みで） */}
+          {!isLeftCollapsed && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '4px' }}>
+              {aiTitles.map((title, i) => (
+                <div key={i} style={{ fontSize: '11px', color: colors.subtext }}>
+                  {title}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </aside>
 
       {/* ── 2. 中央メインコンテンツ ── */}
       <main style={{
