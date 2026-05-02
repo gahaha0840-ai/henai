@@ -116,6 +116,8 @@ function PhotoEditor() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const idRef = useRef(0);
 
+  // 画像投稿追加処理
+  /* 複数枚追加
   const addFiles = (files: FileList | null) => {
     if (!files) return;
     const newImages: UploadedImage[] = Array.from(files)
@@ -127,6 +129,20 @@ function PhotoEditor() {
       }));
     setImages((prev) => [...prev, ...newImages]);
     if (!selectedImg && newImages.length > 0) setSelectedImg(newImages[0]);
+  };
+*/
+  // 単一枚追加
+  const addFiles = (files: FileList | null) => {
+    if (!files) return;
+    const file = Array.from(files).find((f) => f.type.startsWith("image/"));
+    if (!file) return;
+    const newImage: UploadedImage = {
+      id: ++idRef.current,
+      url: URL.createObjectURL(file),
+      file,
+    };
+    setImages([newImage]); // ← 上書きにする
+    setSelectedImg(newImage); // ← 常に選択状態に
   };
 
   const onDrop = useCallback((e: React.DragEvent) => {
