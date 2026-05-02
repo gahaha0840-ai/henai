@@ -337,10 +337,9 @@ function ZukanEditor() {
   const targetRef = useRef<ZukanTarget | null>(null);
   const idRef = useRef(2);
 
-  const totalSpreads = Math.ceil((pages.length + 1) / 2);
-  const leftPage = spread === 0 ? null : (pages[spread * 2 - 2] ?? null);
-  const rightPage =
-    spread === 0 ? (pages[0] ?? null) : (pages[spread * 2 - 1] ?? null);
+  const totalSpreads = Math.ceil(pages.length / 2) + 1; // spread0=表紙単独, 1以降が見開き
+  const leftPage = spread === 0 ? null : (pages[(spread - 1) * 2] ?? null);
+  const rightPage = spread === 0 ? null : (pages[(spread - 1) * 2 + 1] ?? null);
 
   const openFile = (t: ZukanTarget) => {
     targetRef.current = t;
@@ -457,7 +456,9 @@ function ZukanEditor() {
 
           {/* 右ページ */}
           <div style={{ background: "#faf6ef", minHeight: "460px" }}>
-            {rightPage ? (
+            {spread === 0 ? (
+              <CoverSpine title={cover.title} />
+            ) : rightPage ? (
               <ContentPage
                 page={rightPage}
                 onImageClick={() =>
@@ -547,8 +548,8 @@ function ZukanEditor() {
             key={p.id}
             label={`p${i + 1}`}
             imageUrl={p.imageUrl}
-            active={spread === Math.ceil((i + 1) / 2)}
-            onClick={() => setSpread(Math.ceil((i + 1) / 2))}
+            active={spread === Math.floor(i / 2) + 1}
+            onClick={() => setSpread(Math.floor(i / 2) + 1)}
           />
         ))}
       </div>
@@ -673,6 +674,7 @@ function ContentPage({
 
   const onWheel = (e: React.WheelEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     const next = Math.min(3, Math.max(0.5, page.imgScale - e.deltaY * 0.001));
     onUpdate({ imgScale: next });
   };
@@ -750,10 +752,11 @@ function ContentPage({
         <div
           onWheel={onWheel}
           style={{
-            height: showText ? "240px" : "100%",
+            height: showText ? "240px" : "calc(100% - 37px)", // ツールバー分を引く
             flexShrink: 0,
+            flexGrow: showText ? 0 : 1,
             background: colors.border,
-            overflow: "hidden",
+            overflow: "hidden", // ← はみ出し防止
             position: "relative",
             cursor: page.imageUrl ? "grab" : "pointer",
           }}
@@ -771,19 +774,12 @@ function ContentPage({
                   userSelect: "none",
                 }}
               >
-                {/* 画像の位置と拡大率を反映 */}
                 <img
                   src={page.imageUrl}
                   alt=""
                   style={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: `
-                      translate(-50%, -50%)
-                      translate(${page.imgX}px, ${page.imgY}px)
-                      scale(${page.imgScale})
-                    `,
+                    transform: `translate(${page.imgX}px, ${page.imgY}px) scale(${page.imgScale})`,
+                    maxWidth: "none",
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
@@ -863,6 +859,60 @@ function ContentPage({
           }}
         />
       )}
+    </div>
+  );
+}
+
+// ── 背表紙（表紙spread時の右側） ──
+function CoverSpine({ title }: { title: string }) {
+  return (
+    <div
+      style={{
+        height: "460px",
+        background: "linear-gradient(to right, #c8a87a, #b8955c)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px 0",
+        boxShadow: "inset 4px 0 12px rgba(0,0,0,0.15)",
+      }}
+    >
+      {/* 背表紙のタイトル（縦書き） */}
+      <div
+        style={{
+          writingMode: "vertical-rl",
+          textOrientation: "mixed",
+          fontFamily: fonts.serif,
+          fontSize: "15px",
+          fontWeight: "bold",
+          color: "rgba(255,255,255,0.85)",
+          letterSpacing: "0.15em",
+          textShadow: "0 1px 3px rgba(0,0,0,0.3)",
+          marginBottom: "20px",
+        }}
+      >
+        {title || "偏愛図鑑"}
+      </div>
+      {/* 装飾ライン */}
+      <div
+        style={{
+          width: "1px",
+          flex: 1,
+          background: "rgba(255,255,255,0.2)",
+          margin: "12px 0",
+        }}
+      />
+      <div
+        style={{
+          fontSize: "10px",
+          color: "rgba(255,255,255,0.4)",
+          fontFamily: fonts.sans,
+          letterSpacing: "0.1em",
+        }}
+      >
+        personal archive
+      </div>
     </div>
   );
 }
