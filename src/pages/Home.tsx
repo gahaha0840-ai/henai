@@ -1,6 +1,5 @@
 // src/pages/Home.tsx
-import { useState, useEffect } from "react";
-import { PhotoMaterial, Collection } from "../types/index.ts";
+import { useItems } from "../hooks/useItems.ts";
 import PhotoCard from "../components/PhotoCard.tsx";
 import ZukanCard from "../components/ZukanCard.tsx";
 
@@ -16,49 +15,9 @@ const fonts = {
   serif: '"Noto Serif JP", "Hiragino Mincho ProN", serif',
 };
 
-// 📝 【開発用設定】true にするとAPIから取得、false にするとダミーデータを使用
-const USE_REAL_API = false;
-
 export default function Home() {
-  const [photos, setPhotos] = useState<PhotoMaterial[]>([]);
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        if (USE_REAL_API) {
-          // 🚀 本番モード
-          const [photosRes, collectionsRes] = await Promise.all([
-            fetch("http://localhost:8000/api/photos"),
-            fetch("http://localhost:8000/api/collections"),
-          ]);
-          if (!photosRes.ok || !collectionsRes.ok) {
-            throw new Error("サーバーからのデータ取得に失敗しました");
-          }
-          setPhotos(await photosRes.json());
-          setCollections(await collectionsRes.json());
-        } else {
-          // 🛠️ 開発モード：ネットワーク遅延を擬似的に再現
-          const res = await fetch("/data.json");
-          const data = await res.json();
-          setPhotos(data.photos || []);
-          setCollections(data.collections || []);
-        }
-      } catch (err) {
-        console.error("データの取得に失敗しました", err);
-        setError("データを読み込めませんでした。サーバーが起動しているか確認してください。");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);   // USE_REAL_API は定数なので依存配列から除外
+  // 共通フック「useItems」からデータと状態を受け取るだけ！
+  const { photos, collections, loading, error } = useItems();
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
@@ -78,7 +37,7 @@ export default function Home() {
       )}
 
       {/* ── ローディング ── */}
-      {isLoading ? (
+      {loading ? (
         <div
           style={{
             textAlign: "center",

@@ -1,5 +1,3 @@
-// src/hooks/useItems.ts
-//データの取得ロジックを共通化するカスタムフック
 import { useState, useEffect } from 'react';
 import { PhotoMaterial, Collection } from '../types/index.ts';
 
@@ -7,25 +5,28 @@ export const useItems = () => {
   const [photos, setPhotos] = useState<PhotoMaterial[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadData = async () => {
+    const fetchData = async () => {
       try {
-        // 現在はローカルJSONを参照
+        setLoading(true);
+        // 【重要】将来データベース(Supabase等)に移行する際は、ここをAPIコールに書き換えるだけ
         const res = await fetch("/data.json");
-        const data = await res.json();
+        if (!res.ok) throw new Error("データの取得に失敗しました");
         
-        // データの持ち方を photos と collections に整理
+        const data = await res.json();
         setPhotos(data.photos || []);
         setCollections(data.collections || []);
       } catch (err) {
-        console.error("Failed to fetch data", err);
+        console.error(err);
+        setError("データの読み込みに失敗しました。");
       } finally {
         setLoading(false);
       }
     };
-    loadData();
+    fetchData();
   }, []);
 
-  return { photos, collections, loading };
+  return { photos, collections, loading, error };
 };
