@@ -1,6 +1,6 @@
 // src/pages/Observation.tsx
-import { useEffect, useState } from "react";
-import { PhotoMaterial } from "../types/index.ts";
+import { useState } from "react";
+import { useItems } from "../hooks/useItems.ts";
 import ItemCard from "../components/ItemCard.tsx";
 import TagChip from "../components/TagChip.tsx";
 
@@ -18,27 +18,17 @@ const fonts = {
 };
 
 export default function Observation() {
-  const [items, setItems] = useState<PhotoMaterial[]>([]);
+  // 1. useItemsから必要なデータだけを受け取る（useEffectでの取得はもう不要です！）
+  const { photos, loading, error } = useItems();
   const [selTag, setSelTag] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadItems = async () => {
-      try {
-        const res = await fetch("/data.json");
-        if (!res.ok) throw new Error(`データの取得に失敗しました (${res.status})`);
-        const data = await res.json();
-        setItems(Array.isArray(data) ? data : data.photos || []);
-      } catch (err) {
-        console.error(err);
-        setError("記録の同期に失敗しました。");
-      }
-    };
-    loadItems();
-  }, []);
+  // 全タグの抽出
+  const allTags = [...new Set(photos.flatMap((i) => i.tags ?? []))];
+  const displayed = selTag ? photos.filter((i) => i.tags?.includes(selTag)) : photos;
 
-  const allTags = [...new Set(items.flatMap((i) => i.tags ?? []))];
-  const displayed = selTag ? items.filter((i) => i.tags?.includes(selTag)) : items;
+  // ローディングとエラーの表示
+  if (loading) return <div style={{ color: "#A39B8B", padding: "40px" }}>観測データを展開中...</div>;
+  if (error) return <div style={{ color: "#991B1B", padding: "40px" }}>{error}</div>;
 
   return (
     <div style={{

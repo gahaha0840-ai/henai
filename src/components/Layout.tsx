@@ -1,9 +1,11 @@
 // src/components/Layout.tsx
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useItems } from '../hooks/useItems.ts';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
+  const { photos, collections } = useItems(); 
 
   const LEFT_FULL   = 220;
   const LEFT_MINI   = 72;
@@ -52,13 +54,77 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { path: '/record',      label: '記録する', icon: '✏️' },
   ];
 
-  const aiTitles = [
-    "AIによる称号",
-    "AIによる称号",
-    "AIによる称号",
-  ];
+  // ── ページごとのコンテキストに応じた擬似AI処理 ──
+  
+  let targetTags: string[] = [];
+  let pageContext = "";
 
-  // ダミーのプロフィール画像URL（後でSupabase等のデータに置き換え）
+  if (location.pathname.startsWith('/photos')) {
+    targetTags = photos.flatMap(p => p.tags || []);
+    pageContext = "フォト";
+  } else if (location.pathname.startsWith('/zukan')) {
+    targetTags = collections.flatMap(c => c.aiTags || []);
+    pageContext = "図鑑";
+  } else {
+    targetTags = [
+      ...photos.flatMap(p => p.tags || []), 
+      ...collections.flatMap(c => c.aiTags || [])
+    ];
+    pageContext = "全体";
+  }
+
+  // 1. タグの出現回数をカウント
+  const tagCounts = targetTags.reduce((acc, tag) => {
+    const cleanTag = tag.replace(/^#/, "");
+    acc[cleanTag] = (acc[cleanTag] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // 2. グラフ用にデータ配列を作成しソート
+  const topTagsData = Object.entries(tagCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([tag, count]) => ({ tag, count }));
+
+  // ── 円グラフ描画用の計算 ──
+  // アースカラーのグラデーションパレット
+  const chartColors = ["#A68A61", "#C2A878", "#8B7355", "#D4C4A8", "#6B5B45"];
+  
+  // 合計値を計算
+  const totalCount = topTagsData.reduce((sum, data) => sum + data.count, 0);
+
+  // CSSの conic-gradient 用の文字列を生成
+  let currentPercent = 0;
+  const gradientString = topTagsData.map((data, index) => {
+    const percent = (data.count / totalCount) * 100;
+    const color = chartColors[index % chartColors.length];
+    const part = `${color} ${currentPercent}% ${currentPercent + percent}%`;
+    currentPercent += percent;
+    return part;
+  }).join(", ");
+
+  // 3. AIサジェスト文の生成
+  const topTrend = topTagsData.length > 0 ? topTagsData[0].tag : null;
+  const aiSuggestion = topTrend 
+    ? `現在の${pageContext}の記録を見ると、「${topTrend}」への関心が特に高まっているようです。過去のアーカイブと組み合わせて、新しい発見を探してみませんか？`
+    : `まだ${pageContext}のデータが少ないようです。日常の気になるものを記録して、あなたの偏愛の傾向を分析しましょう。`;
+
+  // 4. 左下のAI称号生成
+  const allTagsCounts = [...photos.flatMap(p => p.tags || []), ...collections.flatMap(c => c.aiTags || [])].reduce((acc, tag) => {
+    const cleanTag = tag.replace(/^#/, "");
+    acc[cleanTag] = (acc[cleanTag] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  const overallTopTags = Object.entries(allTagsCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(entry => entry[0]);
+
+  const aiTitles = overallTopTags.length >= 2 
+    ? [`${overallTopTags[0]}の探求者`, `${overallTopTags[1]}の愛好家`] 
+    : ["AIによる称号", "AIによる称号"];
+
   const profileImageUrl = ""; 
 
   return (
@@ -72,37 +138,35 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       overflow: 'hidden',
       position: 'relative',
     }}>
-{/* ── 左サイドバー復活ボタン ── */}
-{/* isLeftCollapsed が true（最小化中）のときだけ、サイドバーの右外側に表示 */}
-{isLeftCollapsed && (
-  <button
-    onClick={() => setUserOverride(false)}
-    style={{
-      position: 'absolute',
-      // サイドバーの幅（LEFT_MINI = 72px）の少し右側に配置
-      left: `${LEFT_MINI + 16}px`, 
-      top: '20px',
-      zIndex: 100,
-      background: colors.card,
-      border: `1px solid ${colors.border}`,
-      borderRadius: '50%',
-      width: '40px',
-      height: '40px',
-      cursor: 'pointer',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-      color: colors.accent,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontSize: '16px',
-      transition: 'all 0.3s ease',
-    }}
-    onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
-    onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-  >
-    ▶
-  </button>
-)}
+      {/* ── 左サイドバー復活ボタン ── */}
+      {isLeftCollapsed && (
+        <button
+          onClick={() => setUserOverride(false)}
+          style={{
+            position: 'absolute',
+            left: `${LEFT_MINI + 16}px`, 
+            top: '20px',
+            zIndex: 100,
+            background: colors.card,
+            border: `1px solid ${colors.border}`,
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+            color: colors.accent,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '16px',
+            transition: 'all 0.3s ease',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+        >
+          ▶
+        </button>
+      )}
 
       {/* ── 1. 左サイドバー ── */}
       <aside style={{
@@ -186,7 +250,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           borderTop: `1px solid ${colors.border}`,
           marginTop: '20px',
         }}>
-          {/* Linkで囲って遷移可能に */}
           <Link 
             to="/account" 
             style={{ 
@@ -250,7 +313,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </Link>
 
-          {/* 称号リスト（クリック範囲外にするか、ここも含めてLinkにするかはお好みで） */}
+          {/* 称号リスト */}
           {!isLeftCollapsed && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '4px' }}>
               {aiTitles.map((title, i) => (
@@ -279,7 +342,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </main>
 
-      {/* ── 右サイドバー復活ボタン（閉じているときのみ表示） ── */}
+      {/* ── 右サイドバー復活ボタン ── */}
       {!isRightOpen && (
         <button
           onClick={() => setIsRightOpen(true)}
@@ -320,31 +383,84 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </button>
 
           <div style={{ padding: '70px 24px 24px' }}>
+            
+            {/* ── 自分の傾向（円グラフ表示） ── */}
             <section style={{ marginBottom: '40px' }}>
               <h4 style={{ color: colors.subtext, marginBottom: '20px', fontSize: '13px' }}>
-                自分の傾向
+                {pageContext}の傾向
               </h4>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                <span style={{ fontSize: '12px', padding: '6px 14px', backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '999px' }}>
-                  #キーボード
+              
+              {topTagsData.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>
+                  
+                  {/* 円グラフ（ドーナツチャート） */}
+                  <div style={{
+                    width: '140px',
+                    height: '140px',
+                    borderRadius: '50%',
+                    background: `conic-gradient(${gradientString})`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                  }}>
+                    {/* ドーナツの穴（中央のくり抜き） */}
+                    <div style={{
+                      width: '90px',
+                      height: '90px',
+                      borderRadius: '50%',
+                      backgroundColor: colors.bg, // サイドバーの背景と馴染ませる
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexDirection: 'column',
+                      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)',
+                    }}>
+                      <span style={{ fontSize: '20px', fontWeight: 'bold', color: colors.text, lineHeight: 1, marginBottom: '2px' }}>
+                        {totalCount}
+                      </span>
+                      <span style={{ fontSize: '10px', color: colors.subtext }}>Total</span>
+                    </div>
+                  </div>
+
+                  {/* 凡例（タグとカウント） */}
+                  <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {topTagsData.map((data, index) => (
+                      <div key={data.tag} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{
+                            width: '10px',
+                            height: '10px',
+                            borderRadius: '50%',
+                            backgroundColor: chartColors[index % chartColors.length]
+                          }} />
+                          <span style={{ color: colors.text, fontWeight: '500' }}>#{data.tag}</span>
+                        </div>
+                        <span style={{ color: colors.subtext }}>{data.count} 件</span>
+                      </div>
+                    ))}
+                  </div>
+
+                </div>
+              ) : (
+                <span style={{ fontSize: '12px', color: colors.subtext }}>
+                  データ収集中...
                 </span>
-                <span style={{ fontSize: '12px', padding: '6px 14px', backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '999px' }}>
-                  #3Dプリンタ
-                </span>
-              </div>
+              )}
             </section>
 
+            {/* ── AIによるサジェスト（動的表示） ── */}
             <section>
               <h4 style={{ color: colors.subtext, marginBottom: '16px', fontSize: '13px' }}>
                 AIによるサジェスト
               </h4>
               <div style={{
-                fontSize: '12px', color: colors.subtext,
+                fontSize: '12px', color: colors.text,
                 backgroundColor: 'white', padding: '16px',
                 borderRadius: '12px', border: `1px solid ${colors.border}`,
                 lineHeight: '1.6',
               }}>
-                「自作キーボード」に興味があるなら、次は真鍮プレートの加工やQMKファームウェアのカスタマイズに挑戦してみるのはいかがでしょうか？
+                {aiSuggestion}
               </div>
             </section>
           </div>

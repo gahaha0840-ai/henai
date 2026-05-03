@@ -1,7 +1,8 @@
 // src/pages/UserProfile.tsx
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { PhotoMaterial, Collection, UserProfile as UserProfileType } from "../types/index.ts";
+import { UserProfile as UserProfileType } from "../types/index.ts";
+import { useItems } from "../hooks/useItems.ts"; // フックをインポート
 import ZukanCard from "../components/ZukanCard.tsx";
 import PhotoCard from "../components/PhotoCard.tsx";
 import TagChip from "../components/TagChip.tsx";
@@ -22,74 +23,42 @@ const fonts = {
 export default function UserProfile() {
   const { userId } = useParams<{ userId: string }>();
   
-  // 状態管理
-  const [userProfile, setUserProfile] = useState<UserProfileType | null>(null);
-  const [photos, setPhotos] = useState<PhotoMaterial[]>([]);
-  const [collections, setCollections] = useState<Collection[]>([]);
+  // 1. 共通フックから全データを取得
+  const { photos, collections, loading, error } = useItems();
   const [selTag, setSelTag] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch("/data.json");
-        if (!res.ok) throw new Error(`データの取得に失敗しました (${res.status})`);
-        
-        const allData = await res.json();
+  // 2. モックユーザー情報の生成（※将来的にAPIから取得する場合は、useUserなどの別フックにするかuseItemsに統合します）
+  const userProfile: UserProfileType = {
+    id: userId || "unknown",
+    name: userId === "1" ? "ユーザーA" : `収集家 ${userId}`,
+    title: "真鍮の蒐集家",
+    stats: [
+      { tag: "キーボード", score: 85 },
+      { tag: "3Dプリント", score: 60 }
+    ]
+  };
 
-        // 1. ユーザー情報の抽出 (実際はAPIから取得する想定)
-        // ここでは userId を元にモックデータを生成
-        setUserProfile({
-          id: userId || "unknown",
-          name: userId === "1" ? "ユーザーA" : `収集家 ${userId}`,
-          title: "真鍮の蒐集家",
-          stats: [
-            { tag: "キーボード", score: 85 },
-            { tag: "3Dプリント", score: 60 }
-          ]
-        });
+  // 3. 取得した全データから、該当ユーザーの投稿のみにフィルタリング
+  // ※ JSON内で userId が数値になっている可能性も考慮し、String()で安全に比較します
+  const userPhotos = photos.filter((p) => String(p.userId) === String(userId));
+  const userCollections = collections.filter((c) => String(c.authorId) === String(userId));
 
-        // 2. 投稿データのフィルタリング
-        // PhotoMaterial (userIdでフィルタ)
-        const filteredPhotos = (allData.photos || []).filter(
-          (p: PhotoMaterial) => p.userId === userId
-        );
-        // Collection (authorIdでフィルタ)
-        const filteredCollections = (allData.collections || []).filter(
-          (c: Collection) => c.authorId === userId
-        );
-
-        setPhotos(filteredPhotos);
-        setCollections(filteredCollections);
-
-      } catch (err) {
-        console.error(err);
-        setError("ユーザーデータの読み込みに失敗しました。");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (userId) loadUserData();
-  }, [userId]);
-
-  // タグ一覧の抽出 (フォトと図鑑の両方から収集)
+  // タグ一覧の抽出 (ユーザーのフォトと図鑑の両方から収集)
   const allTags = [...new Set([
-    ...photos.flatMap((p) => p.tags ?? []),
-    ...collections.flatMap((c) => c.aiTags ?? [])
+    ...userPhotos.flatMap((p) => p.tags ?? []),
+    ...userCollections.flatMap((c) => c.aiTags ?? [])
   ])];
 
-  // フィルタリングされた表示データ
+  // 選択されたタグでさらに表示データをフィルタリング
   const displayedCollections = selTag
-    ? collections.filter((c) => c.aiTags?.includes(selTag))
-    : collections;
+    ? userCollections.filter((c) => c.aiTags?.includes(selTag))
+    : userCollections;
 
   const displayedPhotos = selTag
-    ? photos.filter((p) => p.tags?.includes(selTag))
-    : photos;
+    ? userPhotos.filter((p) => p.tags?.includes(selTag))
+    : userPhotos;
 
+  // ローディングとエラーの表示
   if (loading) return <div style={{ color: colors.subtext, padding: "40px" }}>読み込み中...</div>;
   if (error || !userProfile) return <div style={{ color: "#991b1b", padding: "40px" }}>{error}</div>;
 
@@ -119,7 +88,7 @@ export default function UserProfile() {
         </div>
       </header>
 
-      {/* ── タグフィルター (Observation.tsx 由来) ── */}
+      {/* ── タグフィルター ── */}
       <div style={{ marginBottom: "32px" }}>
         <div style={{ fontSize: "11px", color: colors.subtext, marginBottom: "10px", fontWeight: "bold" }}>
           タグで絞り込む

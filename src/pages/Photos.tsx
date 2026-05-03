@@ -1,7 +1,8 @@
 // src/pages/Photos.tsx
-import { useEffect, useState } from "react";
-import { PhotoMaterial } from "../types/index.ts";
+import { useState } from "react";
+import { useItems } from "../hooks/useItems.ts";
 import PhotoCard from "../components/PhotoCard.tsx";
+import TagChip from "../components/TagChip.tsx"; // 共通のTagChipをインポート
 
 const colors = {
   text: "#3D3328",
@@ -20,19 +21,15 @@ const PIN_COLORS = ["#c0392b", "#e67e22", "#27ae60", "#2980b9", "#8e44ad"];
 const ROTATIONS = [-3.5, -2, -1, 1.5, 2.5, -2.5, 3, -1.5, 0.5, -3];
 
 export default function Photos() {
-  const [items, setItems] = useState<PhotoMaterial[]>([]);
+  // 共通フックからデータ（photos）と状態を受け取る
+  const { photos, loading, error } = useItems();
   const [selTag, setSelTag] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch("/data.json")
-      .then((r) => r.json())
-      .then(setItems);
-  }, []);
-
-  const allTags = [...new Set(items.flatMap((i) => i.tags ?? []))];
+  // tagsの抽出
+  const allTags = [...new Set(photos.flatMap((i) => i.tags ?? []))];
   const displayed = selTag
-    ? items.filter((i) => i.tags?.includes(selTag))
-    : items;
+    ? photos.filter((i) => i.tags?.includes(selTag))
+    : photos;
 
   return (
     <>
@@ -97,6 +94,23 @@ export default function Photos() {
         </div>
       </div>
 
+      {/* ── エラー表示 ── */}
+      {error && (
+        <div
+          style={{
+            padding: "16px",
+            backgroundColor: "#FEE2E2",
+            color: "#991B1B",
+            borderRadius: "8px",
+            marginBottom: "16px",
+            fontSize: "13px",
+            fontFamily: fonts.sans,
+          }}
+        >
+          {error}
+        </div>
+      )}
+
       {/* ── コルクボード ── */}
       <div
         style={{
@@ -109,7 +123,20 @@ export default function Photos() {
           padding: "32px 28px 40px",
         }}
       >
-        {displayed.length === 0 ? (
+        {/* ローディング */}
+        {loading ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "60px 0",
+              color: "rgba(255,253,245,0.7)",
+              fontSize: "13px",
+              fontFamily: fonts.sans,
+            }}
+          >
+            写真を準備中...
+          </div>
+        ) : !error && displayed.length === 0 ? (
           <div
             style={{
               textAlign: "center",
@@ -122,7 +149,7 @@ export default function Photos() {
           >
             このタグの記録はまだありません
           </div>
-        ) : (
+        ) : !error && (
           <div
             style={{
               display: "grid",
@@ -135,46 +162,14 @@ export default function Photos() {
               <PhotoCard
                 key={item.id}
                 item={item}
-                rotation={ROTATIONS[(item.id + i) % ROTATIONS.length]}
-                pinColor={PIN_COLORS[(item.id + i) % PIN_COLORS.length]}
+                // idが文字列(UUID)になっても安全なように、配列のインデックス(i)をベースに計算
+                rotation={ROTATIONS[i % ROTATIONS.length]}
+                pinColor={PIN_COLORS[i % PIN_COLORS.length]}
               />
             ))}
           </div>
         )}
       </div>
     </>
-  );
-}
-
-// ── タグチップ ──
-// ※ TagChip を src/components/TagChip.tsx に切り出す場合はこのブロックを削除し
-//    import TagChip from "../components/TagChip"; を追加してください
-function TagChip({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        fontSize: "11px",
-        padding: "4px 13px",
-        borderRadius: "9999px",
-        border: `1px solid ${active ? colors.accent : colors.border}`,
-        background: active ? colors.accent : colors.bg,
-        color: active ? "#fff" : colors.subtext,
-        cursor: "pointer",
-        fontFamily: fonts.sans,
-        transition: "all 0.15s",
-      }}
-    >
-      {active && "# "}
-      {label}
-    </button>
   );
 }

@@ -1,47 +1,110 @@
-[
-  {
-    "id": 1,
-    "title": "窓 — 松本",
-    "memo": "光の入り方が完璧だった。",
-    "tags": ["窓", "光と影"],
-    "collection": "窓と光",
-    "date": "2026/03/12",
-    "emoji": "🪟"
-  },
-  {
-    "id": 2,
-    "title": "石の壁",
-    "memo": "時間が染み込んでいる。",
-    "tags": ["石", "テクスチャ"],
-    "collection": "石",
-    "date": "2026/03/01",
-    "emoji": "🪨"
-  },
-  {
-    "id": 3,
-    "title": "謎の塔",
-    "memo": "螺旋階段が見える。何の建物だろう？",
-    "tags": ["石", "テクスチャ"],
-    "collection": "建築",
-    "date": "2024/06/01",
-    "img": "https://i.pinimg.com/736x/7a/82/92/7a8292b8a33c279b31f6074d85f837e5.jpg"
-  },
-  {
-    "id": 4,
-    "title": "たばこ",
-    "memo": "もう忘れた",
-    "tags": ["廃れ", "テクスチャ"],
-    "collection": "建築",
-    "date": "2024/07/14",
-    "img": "https://i.pinimg.com/1200x/af/57/c8/af57c8d4d2a284b8def444afc7af9adf.jpg"
-  },
-  {
-    "id": 5,
-    "title": "なんのためのなに",
-    "memo": "長いな",
-    "tags": ["コンクリート", "人工物"],
-    "collection": "石",
-    "date": "2023/05/13",
-    "img": "https://i.pinimg.com/736x/2e/08/6d/2e086dcebee023a18c41d0b7bea25486.jpg"
-  }
-]
+{
+  "photos": [
+    {
+      "id": 1,
+      "userId": "u1",
+      "title": "窓 — 松本",
+      "memo": "光の入り方が完璧だった。",
+      "tags": ["窓", "光と影"],
+      "date": "2026/03/12",
+      "emoji": "🪟",
+      "loc": "松本"
+    },
+    {
+      "id": 2,
+      "userId": "u1",
+      "title": "石の壁",
+      "memo": "時間が染み込んでいる。",
+      "tags": ["石", "テクスチャ"],
+      "date": "2026/03/01",
+      "emoji": "🪨"
+    },
+    {
+      "id": 3,
+      "userId": "u1",
+      "title": "謎の塔",
+      "memo": "螺旋階段が見える。何の建物だろう？",
+      "tags": ["石", "建築"],
+      "date": "2024/06/01",
+      "img": "https://images.unsplash.com/photo-1544256718-3bcf237f3974?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      "id": 4,
+      "userId": "u1",
+      "title": "Corne v4 組み立て",
+      "memo": "キースイッチのハンダ付け完了。ここからファームウェアの書き込み。",
+      "tags": ["キーボード", "自作"],
+      "date": "2026/02/15",
+      "imageUrl": "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      "id": 5,
+      "userId": "u1",
+      "title": "A1 mini 稼働中",
+      "memo": "FreeCADで設計したパーツを出力中。PETGの積層が綺麗。",
+      "tags": ["3Dプリント", "ガジェット"],
+      "date": "2026/01/20",
+      "imageUrl": "https://images.unsplash.com/photo-1631541909062-ed01192e21b0?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      "id": 6,
+      "userId": "u1",
+      "title": "深夜の星空",
+      "memo": "G9 Xの長秒時露光で撮影。ノイズが少なく驚いた。",
+      "tags": ["写真", "夜空", "カメラ"],
+      "date": "2025/11/18",
+      "imageUrl": "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=600&q=80",
+      "loc": "茅野"
+    },
+    {
+      "id": 7,
+      "userId": "u1",
+      "title": "たばこ",
+      "memo": "もう忘れた",
+      "tags": ["廃れ", "テクスチャ"],
+      "date": "2024/07/14",
+      "img": "https://images.unsplash.com/photo-1506544777-64cfbe1142df?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      "id": 8,
+      "userId": "u1",
+      "title": "なんのためのなに",
+      "memo": "長いな",
+      "tags": ["コンクリート", "人工物"],
+      "date": "2023/05/13",
+      "img": "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=600&q=80"
+    }
+  ],
+  "collections": [
+    {
+      "id": "c1",
+      "authorId": "u1",
+      "title": "Corne v4 と 3Dプリント",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=600&q=80",
+      "content": "スプリットキーボードの追求。Bambu Lab A1 miniとFreeCADを活用し、理想の打鍵感とエルゴノミクスを満たすオリジナルスイッチホルダーを設計した。デザインと機能性の両立を目指す。",
+      "imageUrls": ["https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=600&q=80"],
+      "aiTags": ["#自作キーボード", "#3Dプリント", "#設計"],
+      "createdAt": "2026-02-20T10:00:00Z"
+    },
+    {
+      "id": "c2",
+      "authorId": "u1",
+      "title": "街のテクスチャと建築",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1544256718-3bcf237f3974?auto=format&fit=crop&w=600&q=80",
+      "content": "松本の窓から差し込む光、長い時間を経て風化した石の壁。日常に潜む「時間の蓄積」を記録するアーカイブ。無機物の中にある人間中心のデザインの痕跡を探る。",
+      "imageUrls": ["https://images.unsplash.com/photo-1544256718-3bcf237f3974?auto=format&fit=crop&w=600&q=80"],
+      "aiTags": ["#建築", "#テクスチャ", "#写真"],
+      "createdAt": "2026-03-15T14:30:00Z"
+    },
+    {
+      "id": "c3",
+      "authorId": "u1",
+      "title": "HMDの未来と空間UI",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?auto=format&fit=crop&w=600&q=80",
+      "content": "次世代VRにおけるHMDの重量バランスと、空間コンピューティング時代のUIについて。視線トラッキングを前提としたデザインアプローチをFigmaでプロトタイピング中。",
+      "imageUrls": ["https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?auto=format&fit=crop&w=600&q=80"],
+      "aiTags": ["#VR", "#HMD", "#UIデザイン"],
+      "createdAt": "2026-04-05T09:15:00Z"
+    }
+  ]
+}
