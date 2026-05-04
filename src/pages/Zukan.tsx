@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useItems } from "../hooks/useItems.tsx";
+import { useItems } from "../hooks/useItems.ts";
 import TagFilter from "../components/TagFilter.tsx";
 
 const F = {
