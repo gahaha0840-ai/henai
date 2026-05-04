@@ -28,12 +28,12 @@ export interface PhotoMaterial {
   memo?: string;
   tags: string[];
   aiTags?: string[];
-  imageUrl?: string; 
-  img?: string;      // ローカルJSON用
+  imageUrl?: string;
+  img?: string; // ローカルJSON用
   emoji?: string;
   bg?: string;
   loc?: string;
-  date?: string;     // YYYY/MM/DD
+  date?: string; // YYYY/MM/DD
   createdAt?: string; // ISO 8601
 }
 
@@ -63,4 +63,30 @@ export interface Collection {
 /**
  * UI表示用の型定義（任意）
  */
-export type ViewMode = 'grid' | 'list';
+export type ViewMode = "grid" | "list";
+
+// 既存の types/index.ts に以下を追記
+
+/**
+ * 図鑑として保存したコルクボードの条件スナップショット
+ */
+export interface BoardCondition {
+  tags: string[]; // 絞り込みタグ（複数可）
+  dateFrom: string; // YYYY/MM/DD（空文字なら制限なし）
+  dateTo: string;
+  maxCount: number;
+  sizeIdx: number;
+  corkColor: string;
+}
+
+/**
+ * 保存済み図鑑ボード
+ */
+export interface SavedBoard {
+  id: string;
+  title: string;
+  condition: BoardCondition;
+  /** カードの手動オフセット { photoId: {dx, dy} } */
+  offsets: Record<string | number, { dx: number; dy: number }>;
+  createdAt: string; // ISO 8601
+}

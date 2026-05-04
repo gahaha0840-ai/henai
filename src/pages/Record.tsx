@@ -73,7 +73,7 @@ export default function Record() {
           marginBottom: 32,
         }}
       >
-        {/* 画像エリア (上) */}
+        {/* 画像エリア  */}
         <div
           onClick={() => !url && ref.current?.click()}
           onDrop={(e) => {
@@ -121,12 +121,12 @@ export default function Record() {
           )}
         </div>
 
-        {/* タイトル入力 (下) */}
+        {/* タイトル入力 */}
         <div style={{ padding: "24px" }}>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="タイトル"
+            placeholder="ひとこと"
             style={{
               width: "100%",
               border: "none",
@@ -150,7 +150,7 @@ export default function Record() {
         onChange={(e) => load(e.target.files?.[0])}
       />
 
-      {/* ── 保存ボタン (一番下) ── */}
+      {/* ── 保存ボタン  ── */}
       <div style={{ display: "flex", justifyContent: "center" }}>
         <button
           onClick={handleSave}
