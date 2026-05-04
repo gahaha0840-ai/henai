@@ -325,8 +325,8 @@ function Zukan() {
           <div
             style={{
               overflow: "hidden",
-              width: "100%",
-              height: "60vh",
+              width: "1000px",
+              height: "600px",
               borderRadius: 12,
               maxHeight: "60vh",
               boxShadow: "0 4px 24px rgba(0,0,0,.15)",
