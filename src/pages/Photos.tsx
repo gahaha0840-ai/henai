@@ -14,7 +14,6 @@ const C = {
   border: "#E6E0D4",
   bg: "#F8F6F0",
 };
-
 const PIN_COLORS = [
   "#c0392b",
   "#e67e22",
@@ -23,7 +22,6 @@ const PIN_COLORS = [
   "#8e44ad",
   "#16a085",
 ];
-const ROTATIONS = [-3.5, -2, -1, 1.5, 2.5, -2.5, 3, -1.5, 0.5, -3];
 const SIZES = [
   { label: "小", w: 120, h: 100 },
   { label: "中", w: 160, h: 135 },
@@ -53,9 +51,7 @@ interface BoardItem extends PhotoMaterial {
   baseY: number;
   pinColor: string;
 }
-
-// ── 条件の初期値 ──
-const defaultCondition: BoardCondition = {
+const defaultCond: BoardCondition = {
   tags: [],
   dateFrom: "",
   dateTo: "",
@@ -64,12 +60,31 @@ const defaultCondition: BoardCondition = {
   corkColor: CORK_COLORS[0].value,
 };
 
+// 条件をkeyに変換（オフセットリセット判定用）
+const condKey = (c: BoardCondition) =>
+  `${c.tags.join(",")}_${c.maxCount}_${c.sizeIdx}`;
+
 export default function Photos() {
   const [photos, setPhotos] = useState<PhotoMaterial[]>([]);
-  const [cond, setCond] = useState<BoardCondition>(defaultCondition);
+  const [cond, setCond] = useState<BoardCondition>(() => {
+    try {
+      return JSON.parse(
+        sessionStorage.getItem("photosCond") ?? "",
+      ) as BoardCondition;
+    } catch {
+      return defaultCond;
+    }
+  });
   const [offsets, setOffsets] = useState<
     Record<string | number, { dx: number; dy: number }>
-  >({});
+  >(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem("photosOffsets") ?? "{}");
+    } catch {
+      return {};
+    }
+  });
+  const prevCondKey = useRef(condKey(cond));
   const [panelOpen, setPanelOpen] = useState(true);
   const [saveModal, setSaveModal] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
@@ -80,18 +95,27 @@ export default function Photos() {
       .then((d) => setPhotos(d.photos ?? d));
   }, []);
 
-  const set = <K extends keyof BoardCondition>(k: K, v: BoardCondition[K]) =>
-    setCond((c) => ({ ...c, [k]: v }));
+  // 条件・オフセットをsessionStorageに永続化
+  useEffect(() => {
+    sessionStorage.setItem("photosCond", JSON.stringify(cond));
+  }, [cond]);
+  useEffect(() => {
+    sessionStorage.setItem("photosOffsets", JSON.stringify(offsets));
+  }, [offsets]);
 
-  const toggleTag = (t: string) =>
-    set(
-      "tags",
-      cond.tags.includes(t)
-        ? cond.tags.filter((x) => x !== t)
-        : [...cond.tags, t],
-    );
+  const set = <K extends keyof BoardCondition>(k: K, v: BoardCondition[K]) => {
+    setCond((c) => {
+      const next = { ...c, [k]: v };
+      // 条件が変わったらオフセットをリセット
+      if (condKey(next) !== prevCondKey.current) {
+        prevCondKey.current = condKey(next);
+        setOffsets({});
+        sessionStorage.removeItem("photosOffsets");
+      }
+      return next;
+    });
+  };
 
-  // タグ一覧
   const allTags = useMemo(
     () => [
       ...new Set(
@@ -103,7 +127,6 @@ export default function Photos() {
     [photos],
   );
 
-  // フィルタリング＋ソート
   const filtered = useMemo((): PhotoMaterial[] => {
     let r = [...photos];
     if (cond.tags.length > 0)
@@ -114,12 +137,9 @@ export default function Photos() {
             .includes(t),
         ),
       );
-    if (cond.dateFrom) r = r.filter((p) => p.date && p.date >= cond.dateFrom);
-    if (cond.dateTo) r = r.filter((p) => p.date && p.date <= cond.dateTo);
     return r.slice(0, cond.maxCount);
-  }, [photos, cond.tags, cond.dateFrom, cond.dateTo, cond.maxCount]);
+  }, [photos, cond.tags, cond.maxCount]);
 
-  // レイアウト
   const size = SIZES[cond.sizeIdx];
   const mixed = cond.sizeIdx === 3;
 
@@ -130,8 +150,8 @@ export default function Photos() {
       const r = mixed ? seededRand(Number(item.id)) : rand;
       const w = mixed ? [120, 140, 160, 190, 210][Math.floor(r() * 5)] : size.w;
       const h = mixed ? Math.round(w * (0.75 + r() * 0.3)) : size.h;
-      const col = i % cols;
-      const row = Math.floor(i / cols);
+      const col = i % cols,
+        row = Math.floor(i / cols);
       return {
         ...item,
         w,
@@ -153,11 +173,18 @@ export default function Photos() {
     ...board.map((b) => b.baseY + (offsets[b.id]?.dy ?? 0) + b.h + 80),
   );
 
-  // ライトボックス
   const lightbox = lightboxIdx !== null ? filtered[lightboxIdx] : null;
-  const goPrev = () => setLightboxIdx((i) => (i !== null && i > 0 ? i - 1 : i));
-  const goNext = () =>
-    setLightboxIdx((i) => (i !== null && i < filtered.length - 1 ? i + 1 : i));
+  const goPrev = useCallback(
+    () => setLightboxIdx((i) => (i !== null && i > 0 ? i - 1 : i)),
+    [],
+  );
+  const goNext = useCallback(
+    () =>
+      setLightboxIdx((i) =>
+        i !== null && i < filtered.length - 1 ? i + 1 : i,
+      ),
+    [filtered.length],
+  );
   useEffect(() => {
     if (lightboxIdx === null) return;
     const h = (e: KeyboardEvent) => {
@@ -167,7 +194,7 @@ export default function Photos() {
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [lightboxIdx, filtered.length]);
+  }, [lightboxIdx, goPrev, goNext]);
 
   return (
     <>
@@ -232,127 +259,95 @@ export default function Photos() {
         </div>
       </div>
 
-      {/* 条件パネル */}
+      {/* 条件パネル — 横並び1行 */}
       {panelOpen && (
         <div
           style={{
             background: "#FCFAEF",
             border: `1px solid ${C.border}`,
             borderRadius: 12,
-            padding: "18px 20px",
+            padding: "14px 20px",
             marginBottom: 18,
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))",
-            gap: 18,
           }}
         >
-          {/* タグ */}
-          <div style={{ gridColumn: "1 / -1" }}>
-            <PanelLabel>タグで絞る</PanelLabel>
+          {/* 1行目：タグ */}
+          <div style={{ marginBottom: 12 }}>
+            <PLabel>タグで絞る</PLabel>
             <TagFilter
               tags={allTags}
               selected={cond.tags.length === 1 ? cond.tags[0] : null}
               onChange={(t) =>
-                t
-                  ? setCond((c) => ({ ...c, tags: [t] }))
-                  : setCond((c) => ({ ...c, tags: [] }))
+                setCond((c) => {
+                  const next = { ...c, tags: t ? [t] : [] };
+                  if (condKey(next) !== prevCondKey.current) {
+                    prevCondKey.current = condKey(next);
+                    setOffsets({});
+                  }
+                  return next;
+                })
               }
               mode="row"
             />
           </div>
-
-          {/* 日付範囲 */}
-          <div>
-            <PanelLabel>日付（から）</PanelLabel>
-            <input
-              type="text"
-              value={cond.dateFrom}
-              placeholder="2026/01/01"
-              onChange={(e) => set("dateFrom", e.target.value)}
-              style={inputSt}
-            />
-          </div>
-          <div>
-            <PanelLabel>日付（まで）</PanelLabel>
-            <input
-              type="text"
-              value={cond.dateTo}
-              placeholder="2026/12/31"
-              onChange={(e) => set("dateTo", e.target.value)}
-              style={inputSt}
-            />
-          </div>
-
-          {/* 枚数 */}
-          <div>
-            <PanelLabel>枚数：最大 {cond.maxCount} 枚</PanelLabel>
-            <input
-              type="range"
-              min={2}
-              max={50}
-              value={cond.maxCount}
-              onChange={(e) => set("maxCount", Number(e.target.value))}
-              style={{ width: "100%", accentColor: C.accent }}
-            />
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: 10,
-                color: C.sub,
-                marginTop: 2,
-              }}
-            >
-              <span>2</span>
-              <span>50</span>
-            </div>
-          </div>
-
-          {/* カードサイズ */}
-          <div>
-            <PanelLabel>カードサイズ</PanelLabel>
-            <div style={{ display: "flex", gap: 6 }}>
-              {SIZES.map((s, i) => (
-                <SmallChip
-                  key={s.label}
-                  label={s.label}
-                  active={cond.sizeIdx === i}
-                  onClick={() => set("sizeIdx", i)}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* コルク色 */}
-          <div>
-            <PanelLabel>コルクの色</PanelLabel>
-            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-              {CORK_COLORS.map((cc) => (
-                <button
-                  key={cc.value}
-                  title={cc.label}
-                  onClick={() => set("corkColor", cc.value)}
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: "50%",
-                    background: cc.value,
-                    cursor: "pointer",
-                    border: `3px solid ${cond.corkColor === cc.value ? C.text : "transparent"}`,
-                    transition: "border .15s",
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* マッチ数 */}
-          <div style={{ display: "flex", alignItems: "flex-end" }}>
+          {/* 2行目：各条件を横並び */}
+          <div
+            style={{
+              display: "flex",
+              gap: 24,
+              alignItems: "flex-end",
+              flexWrap: "wrap",
+            }}
+          >
             <div>
-              <PanelLabel>マッチ</PanelLabel>
+              <PLabel>枚数：{cond.maxCount}枚</PLabel>
+              <input
+                type="range"
+                min={2}
+                max={50}
+                value={cond.maxCount}
+                onChange={(e) => set("maxCount", Number(e.target.value))}
+                style={{ width: 120, accentColor: C.accent }}
+              />
+            </div>
+            <div>
+              <PLabel>カードサイズ</PLabel>
+              <div style={{ display: "flex", gap: 5 }}>
+                {SIZES.map((s, i) => (
+                  <SmChip
+                    key={s.label}
+                    label={s.label}
+                    active={cond.sizeIdx === i}
+                    onClick={() => set("sizeIdx", i)}
+                  />
+                ))}
+              </div>
+            </div>
+            <div>
+              <PLabel>コルクの色</PLabel>
+              <div style={{ display: "flex", gap: 7, marginTop: 4 }}>
+                {CORK_COLORS.map((cc) => (
+                  <button
+                    key={cc.value}
+                    title={cc.label}
+                    onClick={() => set("corkColor", cc.value)}
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      background: cc.value,
+                      cursor: "pointer",
+                      border: `3px solid ${cond.corkColor === cc.value ? C.text : "transparent"}`,
+                      transition: "border .15s",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div style={{ marginLeft: "auto", textAlign: "right" }}>
+              <PLabel>マッチ</PLabel>
               <span
                 style={{
-                  fontSize: 26,
+                  fontSize: 22,
                   fontWeight: "bold",
                   color: C.accent,
                   fontFamily: F.serif,
@@ -360,7 +355,7 @@ export default function Photos() {
               >
                 {filtered.length}
               </span>
-              <span style={{ fontSize: 12, color: C.sub, marginLeft: 4 }}>
+              <span style={{ fontSize: 11, color: C.sub, marginLeft: 4 }}>
                 枚
               </span>
             </div>
@@ -374,7 +369,7 @@ export default function Photos() {
           overflowX: "auto",
           overflowY: "auto",
           borderRadius: 12,
-          maxHeight: "62vh",
+          maxHeight: "65vh",
           boxShadow: "0 4px 24px rgba(0,0,0,.15)",
         }}
       >
@@ -419,20 +414,18 @@ export default function Photos() {
           ))}
         </div>
       </div>
-
       <div
         style={{
           textAlign: "right",
           fontSize: 10,
           color: C.sub,
-          marginTop: 8,
+          marginTop: 6,
           fontFamily: F.mono,
         }}
       >
-        {filtered.length} 枚　ドラッグでカードを移動できます
+        長押しドラッグでカードを移動　条件変更で位置リセット
       </div>
 
-      {/* 保存モーダル */}
       {saveModal && (
         <SaveModal
           cond={cond}
@@ -594,8 +587,10 @@ function DraggablePin({
   onOffsetChange: (o: { dx: number; dy: number }) => void;
   onClick: () => void;
 }) {
-  const [dragging, setDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const didDrag = useRef(false); // ドラッグしたかどうか
+  const longTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startRef = useRef<{
     mx: number;
     my: number;
@@ -603,34 +598,49 @@ function DraggablePin({
     dy: number;
   } | null>(null);
 
-  const onMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDragging(true);
+  // 長押し判定（300ms）
+  const onPointerDown = (e: React.PointerEvent) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    didDrag.current = false;
     startRef.current = {
       mx: e.clientX,
       my: e.clientY,
       dx: offset.dx,
       dy: offset.dy,
     };
+    longTimer.current = setTimeout(() => setDragging(true), 300);
   };
 
-  useEffect(() => {
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!startRef.current) return;
+    const moved = Math.hypot(
+      e.clientX - startRef.current.mx,
+      e.clientY - startRef.current.my,
+    );
+    if (moved > 4 && longTimer.current) {
+      clearTimeout(longTimer.current);
+      longTimer.current = null;
+    }
     if (!dragging) return;
-    const onMove = (e: MouseEvent) => {
-      if (!startRef.current) return;
-      onOffsetChange({
-        dx: startRef.current.dx + e.clientX - startRef.current.mx,
-        dy: startRef.current.dy + e.clientY - startRef.current.my,
-      });
-    };
-    const onUp = () => setDragging(false);
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, [dragging]);
+    didDrag.current = true;
+    onOffsetChange({
+      dx: startRef.current.dx + e.clientX - startRef.current.mx,
+      dy: startRef.current.dy + e.clientY - startRef.current.my,
+    });
+  };
+
+  const onPointerUp = () => {
+    if (longTimer.current) {
+      clearTimeout(longTimer.current);
+      longTimer.current = null;
+    }
+    if (!didDrag.current && !dragging) {
+      // 長押しなしで離した → クリック扱い
+      onClick();
+    }
+    setDragging(false);
+    startRef.current = null;
+  };
 
   const x = item.baseX + offset.dx + 40;
   const y = item.baseY + offset.dy + 40;
@@ -639,24 +649,28 @@ function DraggablePin({
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onMouseDown={onMouseDown}
-      onClick={() => !dragging && onClick()}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
       style={{
         position: "absolute",
         left: x,
         top: y,
         width: item.w,
-        transform:
-          hovered && !dragging
+        transform: dragging
+          ? `rotate(${item.rot * 0.3}deg) scale(1.06)`
+          : hovered
             ? "rotate(0deg) translateY(-5px) scale(1.04)"
             : `rotate(${item.rot}deg)`,
-        filter: `drop-shadow(${dragging ? "4px 12px 20px rgba(0,0,0,.45)" : "2px 5px 10px rgba(0,0,0,.28)"})`,
+        filter: `drop-shadow(${dragging ? "5px 14px 22px rgba(0,0,0,.5)" : "2px 5px 10px rgba(0,0,0,.28)"})`,
         transition: dragging ? "none" : "transform .2s, filter .2s",
-        cursor: dragging ? "grabbing" : "grab",
+        cursor: dragging ? "grabbing" : hovered ? "grab" : "default",
         zIndex: dragging ? 50 : hovered ? 10 : 1,
         userSelect: "none",
+        touchAction: "none",
       }}
     >
+      {/* ピン */}
       <div
         style={{
           width: 12,
@@ -670,6 +684,7 @@ function DraggablePin({
           boxShadow: "0 2px 5px rgba(0,0,0,.4)",
         }}
       />
+      {/* ポラロイド */}
       <div style={{ background: "#FFFDF5", borderRadius: 2 }}>
         <div
           style={{
@@ -752,7 +767,6 @@ function SaveModal({
 }) {
   const [title, setTitle] = useState("");
   const [done, setDone] = useState(false);
-
   const save = () => {
     if (!title.trim()) return;
     const board: SavedBoard = {
@@ -762,7 +776,6 @@ function SaveModal({
       offsets,
       createdAt: new Date().toISOString(),
     };
-    // TODO: Supabase or localStorage に保存
     const existing = JSON.parse(
       localStorage.getItem("savedBoards") ?? "[]",
     ) as SavedBoard[];
@@ -770,7 +783,6 @@ function SaveModal({
     setDone(true);
     setTimeout(onClose, 1200);
   };
-
   return (
     <div
       onClick={onClose}
@@ -827,9 +839,9 @@ function SaveModal({
                 lineHeight: 1.6,
               }}
             >
-              現在の条件・配置を図鑑として保存します。
+              現在の条件と配置を図鑑として保存します。
               <br />
-              Zukan画面から同じ条件で再検索できます。
+              図鑑画面から同じ条件で再検索できます。
             </div>
             <label
               style={{
@@ -943,8 +955,7 @@ function ArrowBtn({
     </button>
   );
 }
-
-function PanelLabel({ children }: { children: React.ReactNode }) {
+function PLabel({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{
@@ -952,7 +963,7 @@ function PanelLabel({ children }: { children: React.ReactNode }) {
         color: C.sub,
         letterSpacing: "0.1em",
         textTransform: "uppercase",
-        marginBottom: 6,
+        marginBottom: 5,
         fontWeight: "bold",
         fontFamily: F.sans,
       }}
@@ -961,8 +972,7 @@ function PanelLabel({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-function SmallChip({
+function SmChip({
   label,
   active,
   onClick,
@@ -990,16 +1000,3 @@ function SmallChip({
     </button>
   );
 }
-
-const inputSt: React.CSSProperties = {
-  width: "100%",
-  boxSizing: "border-box",
-  padding: "8px 12px",
-  borderRadius: 8,
-  border: `1px solid ${C.border}`,
-  background: "#fff",
-  fontSize: 12,
-  fontFamily: F.sans,
-  color: C.text,
-  outline: "none",
-};
