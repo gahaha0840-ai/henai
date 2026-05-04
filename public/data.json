@@ -123,6 +123,30 @@
       ],
       "aiTags": ["#海", "#崖"],
       "createdAt": "2026-04-05T09:15:00Z"
+    },
+    {
+      "id": "c5",
+      "title": "火曜サスペンス",
+      "img": "/images/gake.jpeg",
+      "memo": "次世代VRにおけるHMD...",
+      "aiTags": ["#海", "#崖"],
+      "date": "2026-04-05"
+    },
+    {
+      "id": "c6",
+      "title": "桜並木",
+      "img": "/images/hana1.jpeg",
+      "memo": "aiaiiai",
+      "aiTags": ["#桜", "#堤防"],
+      "date": "2026-04-05"
+    },
+    {
+      "id": "c7",
+      "title": "冬やでぇ",
+      "img": "/images/umi1.jpeg",
+      "memo": "うみだうみだ",
+      "aiTags": ["#雪", "#海"],
+      "date": "2026-04-05"
     }
   ]
 }
