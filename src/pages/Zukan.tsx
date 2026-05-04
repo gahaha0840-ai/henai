@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
-import { useItems } from "../hooks/useItems";
-import TagFilter from "../components/TagFilter";
+import { useItems } from "../hooks/useItems.ts";
+import TagFilter from "../components/TagFilter.tsx";
+import { PhotoMaterial } from "../types/index.ts";
 
 const F = {
   serif: '"Noto Serif JP","Hiragino Mincho ProN",serif',
@@ -15,7 +16,6 @@ const C = {
   bg: "#F8F6F0",
 };
 
-const CORK_BG = "#B8864E";
 const PIN_COLORS = [
   "#c0392b",
   "#e67e22",
@@ -24,21 +24,28 @@ const PIN_COLORS = [
   "#8e44ad",
   "#16a085",
 ];
-const ROTATIONS = [-3.5, -2, -1, 1.5, 2.5, -2.5, 3, -1.5, 0.5, -3, 2, -1.8];
-
 const SIZES = [
   { label: "小", w: 120, h: 100 },
   { label: "中", w: 160, h: 135 },
   { label: "大", w: 210, h: 175 },
   { label: "混在", w: 0, h: 0 },
 ];
-
 const CORK_COLORS = [
   { label: "ナチュラル", value: "#B8864E" },
   { label: "ダーク", value: "#7A5230" },
   { label: "ライト", value: "#D4AA78" },
   { label: "グリーン", value: "#6B7C5A" },
 ];
+
+// ── BoardItem：レイアウト情報を付加した型 ──
+interface BoardItem extends PhotoMaterial {
+  w: number;
+  h: number;
+  rot: number;
+  x: number;
+  y: number;
+  pinColor: string;
+}
 
 function seededRand(seed: number) {
   let s = seed;
@@ -61,17 +68,19 @@ function Zukan() {
   const allTags = useMemo(
     () => [
       ...new Set(
-        photos.flatMap((c) => (c.aiTags ?? []).map((t) => t.replace(/^#/, ""))),
+        photos.flatMap((p: PhotoMaterial) =>
+          (p.aiTags ?? []).map((t: string) => t.replace(/^#/, "")),
+        ),
       ),
     ],
     [photos],
   );
 
   // フィルタリング
-  const filtered = useMemo(() => {
-    let r = selTag
-      ? photos.filter((c) =>
-          c.aiTags?.some((t) => t.replace(/^#/, "") === selTag),
+  const filtered = useMemo((): PhotoMaterial[] => {
+    const r = selTag
+      ? photos.filter((p: PhotoMaterial) =>
+          p.aiTags?.some((t: string) => t.replace(/^#/, "") === selTag),
         )
       : photos;
     return r.slice(0, maxCount);
@@ -81,10 +90,10 @@ function Zukan() {
   const size = SIZES[sizeIdx];
   const mixed = sizeIdx === 3;
 
-  const board = useMemo(() => {
+  const board = useMemo((): BoardItem[] => {
     const rand = seededRand(42);
     const cols = Math.max(2, Math.floor(1060 / ((size.w || 160) + 24)));
-    return filtered.map((item, i) => {
+    return filtered.map((item: PhotoMaterial, i: number) => {
       const r = mixed ? seededRand(Number(item.id)) : rand;
       const w = mixed ? [120, 140, 160, 190, 210][Math.floor(r() * 5)] : size.w;
       const h = mixed ? Math.round(w * (0.75 + r() * 0.3)) : size.h;
@@ -102,12 +111,12 @@ function Zukan() {
     });
   }, [filtered, size.w, size.h, mixed]);
 
-  const boardW = Math.max(860, ...board.map((b) => b.x + b.w + 80));
-  const boardH = Math.max(460, ...board.map((b) => b.y + b.h + 80));
+  const boardW = Math.max(860, ...board.map((b: BoardItem) => b.x + b.w + 80));
+  const boardH = Math.max(460, ...board.map((b: BoardItem) => b.y + b.h + 80));
 
   return (
     <>
-      {/* ── ヘッダー ── */}
+      {/* ヘッダー */}
       <div
         style={{
           display: "flex",
@@ -171,7 +180,7 @@ function Zukan() {
         </div>
       </div>
 
-      {/* ── 条件パネル ── */}
+      {/* 条件パネル */}
       {panelOpen && (
         <div
           style={{
@@ -185,7 +194,6 @@ function Zukan() {
             gap: 18,
           }}
         >
-          {/* タグ */}
           <div style={{ gridColumn: "1 / -1" }}>
             <Label>タグで絞る</Label>
             <TagFilter
@@ -196,7 +204,6 @@ function Zukan() {
             />
           </div>
 
-          {/* 枚数 */}
           <div>
             <Label>枚数：最大 {maxCount} 枚</Label>
             <input
@@ -221,7 +228,6 @@ function Zukan() {
             </div>
           </div>
 
-          {/* カードサイズ */}
           <div>
             <Label>カードサイズ</Label>
             <div style={{ display: "flex", gap: 6 }}>
@@ -236,7 +242,6 @@ function Zukan() {
             </div>
           </div>
 
-          {/* コルク色 */}
           <div>
             <Label>コルクの色</Label>
             <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
@@ -259,7 +264,6 @@ function Zukan() {
             </div>
           </div>
 
-          {/* マッチ数 */}
           <div style={{ display: "flex", alignItems: "flex-end" }}>
             <div>
               <Label>マッチ</Label>
@@ -286,7 +290,7 @@ function Zukan() {
         </div>
       )}
 
-      {/* ── エラー ── */}
+      {/* エラー */}
       {error && (
         <div
           style={{
@@ -302,7 +306,7 @@ function Zukan() {
         </div>
       )}
 
-      {/* ── ローディング ── */}
+      {/* ローディング */}
       {loading ? (
         <div
           style={{
@@ -317,7 +321,7 @@ function Zukan() {
         </div>
       ) : (
         <>
-          {/* ── コルクボード ── */}
+          {/* コルクボード */}
           <div
             style={{
               overflowX: "auto",
@@ -355,112 +359,9 @@ function Zukan() {
                   条件に合う記録がありません
                 </div>
               )}
-              {board.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    position: "absolute",
-                    left: item.x + 40,
-                    top: item.y + 40,
-                    width: item.w,
-                    transform: `rotate(${item.rot}deg)`,
-                    filter: "drop-shadow(2px 5px 10px rgba(0,0,0,.28))",
-                    transition: "transform .2s",
-                    zIndex: 1,
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.transform =
-                      "rotate(0deg) translateY(-6px) scale(1.04)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.transform = `rotate(${item.rot}deg)`)
-                  }
-                >
-                  {/* ピン */}
-                  <div
-                    style={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: "50%",
-                      background: item.pinColor,
-                      border: "2px solid rgba(0,0,0,.2)",
-                      margin: "0 auto -6px",
-                      position: "relative",
-                      zIndex: 2,
-                      boxShadow: "0 2px 5px rgba(0,0,0,.4)",
-                    }}
-                  />
-                  {/* ポラロイド */}
-                  <div style={{ background: "#FFFDF5", borderRadius: 2 }}>
-                    <div
-                      style={{
-                        width: "100%",
-                        height: item.h,
-                        overflow: "hidden",
-                        background: (item as any).bg ?? "#E6E0D4",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {(item as any).img ? (
-                        <img
-                          src={(item as any).img}
-                          alt={item.title}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        <span style={{ fontSize: Math.round(item.w * 0.22) }}>
-                          {(item as any).emoji ?? "📷"}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ padding: "6px 8px 8px" }}>
-                      <div
-                        style={{
-                          fontSize: Math.max(8, Math.round(item.w * 0.066)),
-                          fontWeight: "bold",
-                          color: "#3a2e22",
-                          fontFamily: F.serif,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {item.title}
-                      </div>
-                      {(item as any).memo && item.w >= 150 && (
-                        <div
-                          style={{
-                            fontSize: Math.max(7, Math.round(item.w * 0.055)),
-                            color: "#8a7860",
-                            marginTop: 2,
-                            lineHeight: 1.4,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {(item as any).memo}
-                        </div>
-                      )}
-                      <div
-                        style={{
-                          fontSize: 8,
-                          color: "#b8a890",
-                          marginTop: 3,
-                          fontFamily: F.mono,
-                        }}
-                      >
-                        {(item as any).date ?? ""}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+
+              {board.map((item: BoardItem) => (
+                <PinnedCard key={item.id} item={item} />
               ))}
             </div>
           </div>
@@ -482,6 +383,116 @@ function Zukan() {
   );
 }
 
+// ── ピン留めカード ──
+function PinnedCard({ item }: { item: BoardItem }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: item.x + 40,
+        top: item.y + 40,
+        width: item.w,
+        transform: `rotate(${item.rot}deg)`,
+        filter: "drop-shadow(2px 5px 10px rgba(0,0,0,.28))",
+        transition: "transform .2s",
+        zIndex: 1,
+      }}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.transform =
+          "rotate(0deg) translateY(-6px) scale(1.04)")
+      }
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.transform = `rotate(${item.rot}deg)`)
+      }
+    >
+      {/* ピン */}
+      <div
+        style={{
+          width: 12,
+          height: 12,
+          borderRadius: "50%",
+          background: item.pinColor,
+          border: "2px solid rgba(0,0,0,.2)",
+          margin: "0 auto -6px",
+          position: "relative",
+          zIndex: 2,
+          boxShadow: "0 2px 5px rgba(0,0,0,.4)",
+        }}
+      />
+
+      {/* ポラロイド */}
+      <div style={{ background: "#FFFDF5", borderRadius: 2 }}>
+        <div
+          style={{
+            width: "100%",
+            height: item.h,
+            overflow: "hidden",
+            background: item.bg ?? "#E6E0D4",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {(item.img ?? item.imageUrl) ? (
+            <img
+              src={item.img ?? item.imageUrl}
+              alt={item.title}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            <span style={{ fontSize: Math.round(item.w * 0.22) }}>
+              {item.emoji ?? "📷"}
+            </span>
+          )}
+        </div>
+        <div style={{ padding: "6px 8px 8px" }}>
+          <div
+            style={{
+              fontSize: Math.max(8, Math.round(item.w * 0.066)),
+              fontWeight: "bold",
+              color: "#3a2e22",
+              fontFamily: F.serif,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {item.title}
+          </div>
+          {/* memo、日付はいったん消す 
+          {item.memo && item.w >= 150 && (
+            <div
+              style={{
+                fontSize: Math.max(7, Math.round(item.w * 0.055)),
+                color: "#8a7860",
+                marginTop: 2,
+                lineHeight: 1.4,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {item.memo}
+            </div>
+          )}
+          
+          <div
+            style={{
+              fontSize: 8,
+              color: "#b8a890",
+              marginTop: 3,
+              fontFamily: F.mono,
+            }}
+          >
+            {item.date ?? ""}
+          </div>
+          */}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── 共通 ──
 function Label({ children }: { children: React.ReactNode }) {
   return (
@@ -500,6 +511,7 @@ function Label({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
 function Chip({
   label,
   active,
