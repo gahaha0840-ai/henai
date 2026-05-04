@@ -1,10 +1,12 @@
+// タグのUIコンポーネント
+
 type Props = {
   tags: string[];
   selected: string | null;
   onChange: (tag: string | null) => void;
   mode?: "row" | "wrap";
 };
-
+// すべてを選択した状態はselected=nullで表現する
 export default function TagFilter({
   tags,
   selected,

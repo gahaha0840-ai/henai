@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
-import { useItems } from "../hooks/useItems.ts";
-import TagFilter from "../components/TagFilter.tsx";
+import { useItems } from "../hooks/useItems";
+import TagFilter from "../components/TagFilter";
 
 const F = {
   serif: '"Noto Serif JP","Hiragino Mincho ProN",serif',
@@ -49,7 +49,7 @@ function seededRand(seed: number) {
 }
 
 function Zukan() {
-  const { collections, loading, error } = useItems();
+  const { photos, loading, error } = useItems();
   const [selTag, setSelTag] = useState<string | null>(null);
   const [sizeIdx, setSizeIdx] = useState(1);
   const [corkColor, setCorkColor] = useState(CORK_COLORS[0].value);
@@ -61,23 +61,21 @@ function Zukan() {
   const allTags = useMemo(
     () => [
       ...new Set(
-        collections.flatMap((c) =>
-          (c.aiTags ?? []).map((t) => t.replace(/^#/, "")),
-        ),
+        photos.flatMap((c) => (c.aiTags ?? []).map((t) => t.replace(/^#/, ""))),
       ),
     ],
-    [collections],
+    [photos],
   );
 
   // フィルタリング
   const filtered = useMemo(() => {
     let r = selTag
-      ? collections.filter((c) =>
+      ? photos.filter((c) =>
           c.aiTags?.some((t) => t.replace(/^#/, "") === selTag),
         )
-      : collections;
+      : photos;
     return r.slice(0, maxCount);
-  }, [collections, selTag, maxCount]);
+  }, [photos, selTag, maxCount]);
 
   // レイアウト計算
   const size = SIZES[sizeIdx];

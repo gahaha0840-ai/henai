@@ -126,6 +126,7 @@
     },
     {
       "id": "c5",
+      "authorId": "u1",
       "title": "火曜サスペンス",
       "img": "/images/gake.jpeg",
       "memo": "次世代VRにおけるHMD...",
@@ -147,6 +148,20 @@
       "memo": "うみだうみだ",
       "aiTags": ["#雪", "#海"],
       "date": "2026-04-05"
+    },
+
+    {
+      "id": "c8",
+      "authorId": "user1",
+      "title": "知らない街の夜景みたいだ",
+      "thumbnailUrl": "../public/images/yakei.jpeg",
+      "content": "飛行機の窓から見下ろした知らない町の夜景みたいだ。",
+      "imageUrls": [
+        "../public/images/yakei.jpeg",
+        "../public/images/yakei.jpeg"
+      ],
+      "aiTags": ["#街", "#夜景"],
+      "createdAt": "2026-02-20T00:00:00Z"
     }
   ]
 }
