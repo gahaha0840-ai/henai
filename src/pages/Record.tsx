@@ -18,7 +18,7 @@ export default function Record() {
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState<string | null>(null);
   const [drag, setDrag] = useState(false);
-  const [saved, setSaved] = useState(false); // 保存状態の管理
+  const [saved, setSaved] = useState(false);
   const ref = useRef<HTMLInputElement>(null);
 
   const load = (f?: File) => {
@@ -26,9 +26,7 @@ export default function Record() {
     setUrl(URL.createObjectURL(f));
   };
 
-  // 保存処理
   const handleSave = () => {
-    // ここに保存ロジックを追加可能
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -44,59 +42,35 @@ export default function Record() {
       }}
     >
       {/* ── ヘッダー ── */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 32,
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              fontFamily: F.serif,
-              fontSize: 24,
-              fontWeight: "bold",
-              letterSpacing: "0.05em",
-              marginBottom: 4,
-            }}
-          >
-            ✏️ 記録
-          </h1>
-          <p style={{ fontSize: 12, color: C.sub, fontFamily: F.sans }}>
-            こだわりを写真と言葉で記録しよう。
-          </p>
-        </div>
-
-        {/* 保存ボタン (Zukanの仕様を適用) */}
-        <button
-          onClick={handleSave}
+      <div style={{ marginBottom: 32 }}>
+        <h1
           style={{
-            padding: "8px 18px",
-            borderRadius: 8,
-            border: `1px solid ${C.accent}`,
-            background: saved ? C.accent : "transparent",
-            color: saved ? "#fff" : C.accent,
-            fontSize: 12,
-            cursor: "pointer",
-            transition: "all .2s",
-            fontFamily: F.sans,
+            fontFamily: F.serif,
+            fontSize: 26,
             fontWeight: "bold",
+            letterSpacing: "0.05em",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 8,
           }}
         >
-          {saved ? "保存済み ✓" : "保存する"}
-        </button>
+          <span>✏️</span> 記録
+        </h1>
+        <p style={{ fontSize: 14, color: C.sub, letterSpacing: "0.02em" }}>
+          こだわりを写真と言葉で記録しよう。
+        </p>
       </div>
 
       {/* ── メインカード ── */}
       <div
         style={{
           background: C.card,
-          borderRadius: 20,
+          borderRadius: 24,
           overflow: "hidden",
           border: `1px solid ${C.border}`,
-          boxShadow: "0 8px 24px rgba(0,0,0,0.05)",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
+          marginBottom: 32,
         }}
       >
         {/* 画像エリア (上) */}
@@ -141,42 +115,28 @@ export default function Record() {
               </button>
             </>
           ) : (
-            <div style={{ textAlign: "center", opacity: 0.4 }}>
-              <span style={{ fontSize: 40 }}>📷</span>
-              <p style={{ fontSize: 11, marginTop: 8, fontWeight: "bold" }}>
-                クリックで画像を追加
-              </p>
+            <div style={{ textAlign: "center", opacity: 0.3 }}>
+              <span style={{ fontSize: 48 }}>📷</span>
             </div>
           )}
         </div>
 
-        {/* タイトル入力エリア (下) */}
-        <div style={{ padding: "20px 24px" }}>
-          <label
-            style={{
-              fontSize: 10,
-              color: C.sub,
-              fontWeight: "bold",
-              letterSpacing: "0.1em",
-              display: "block",
-              marginBottom: 8,
-            }}
-          >
-            TITLE
-          </label>
+        {/* タイトル入力 (下) */}
+        <div style={{ padding: "24px" }}>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="ひとこと"
+            placeholder="タイトル"
             style={{
               width: "100%",
               border: "none",
               background: "transparent",
-              fontSize: 18,
+              fontSize: 20,
               fontFamily: F.serif,
               color: title ? C.text : "#C4BEB3",
               outline: "none",
               padding: 0,
+              letterSpacing: "0.05em",
             }}
           />
         </div>
@@ -189,6 +149,28 @@ export default function Record() {
         style={{ display: "none" }}
         onChange={(e) => load(e.target.files?.[0])}
       />
+
+      {/* ── 保存ボタン (一番下) ── */}
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <button
+          onClick={handleSave}
+          style={{
+            padding: "12px 48px",
+            borderRadius: 12,
+            border: `1px solid ${C.accent}`,
+            background: saved ? C.accent : "transparent",
+            color: saved ? "#fff" : C.accent,
+            fontSize: 14,
+            cursor: "pointer",
+            transition: "all .2s",
+            fontFamily: F.sans,
+            fontWeight: "bold",
+            letterSpacing: "0.1em",
+          }}
+        >
+          {saved ? "保存済み ✓" : "保存する"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -197,13 +179,13 @@ const closeBtnStyle: React.CSSProperties = {
   position: "absolute",
   top: 12,
   right: 12,
-  width: 28,
-  height: 28,
+  width: 32,
+  height: 32,
   borderRadius: "50%",
   background: "rgba(0,0,0,0.4)",
   border: "none",
   color: "#fff",
-  fontSize: 16,
+  fontSize: 18,
   cursor: "pointer",
   display: "flex",
   alignItems: "center",
