@@ -85,6 +85,7 @@ export interface BoardCondition {
 export interface SavedBoard {
   id: string;
   title: string;
+  comment?: string;
   condition: BoardCondition;
   /** カードの手動オフセット { photoId: {dx, dy} } */
   offsets: Record<string | number, { dx: number; dy: number }>;
