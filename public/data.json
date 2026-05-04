@@ -82,7 +82,9 @@
       "title": "Corne v4 と 3Dプリント",
       "thumbnailUrl": "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=600&q=80",
       "content": "スプリットキーボードの追求。Bambu Lab A1 miniとFreeCADを活用し、理想の打鍵感とエルゴノミクスを満たすオリジナルスイッチホルダーを設計した。デザインと機能性の両立を目指す。",
-      "imageUrls": ["https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=600&q=80"],
+      "imageUrls": [
+        "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=600&q=80"
+      ],
       "aiTags": ["#自作キーボード", "#3Dプリント", "#設計"],
       "createdAt": "2026-02-20T10:00:00Z"
     },
@@ -92,7 +94,9 @@
       "title": "街のテクスチャと建築",
       "thumbnailUrl": "https://images.unsplash.com/photo-1544256718-3bcf237f3974?auto=format&fit=crop&w=600&q=80",
       "content": "松本の窓から差し込む光、長い時間を経て風化した石の壁。日常に潜む「時間の蓄積」を記録するアーカイブ。無機物の中にある人間中心のデザインの痕跡を探る。",
-      "imageUrls": ["https://images.unsplash.com/photo-1544256718-3bcf237f3974?auto=format&fit=crop&w=600&q=80"],
+      "imageUrls": [
+        "https://images.unsplash.com/photo-1544256718-3bcf237f3974?auto=format&fit=crop&w=600&q=80"
+      ],
       "aiTags": ["#建築", "#テクスチャ", "#写真"],
       "createdAt": "2026-03-15T14:30:00Z"
     },
@@ -102,8 +106,22 @@
       "title": "HMDの未来と空間UI",
       "thumbnailUrl": "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?auto=format&fit=crop&w=600&q=80",
       "content": "次世代VRにおけるHMDの重量バランスと、空間コンピューティング時代のUIについて。視線トラッキングを前提としたデザインアプローチをFigmaでプロトタイピング中。",
-      "imageUrls": ["https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?auto=format&fit=crop&w=600&q=80"],
+      "imageUrls": [
+        "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?auto=format&fit=crop&w=600&q=80"
+      ],
       "aiTags": ["#VR", "#HMD", "#UIデザイン"],
+      "createdAt": "2026-04-05T09:15:00Z"
+    },
+    {
+      "id": "c4",
+      "authorId": "u1",
+      "title": "でっっていう",
+      "thumbnailUrl": "../public/images/gake.jpeg",
+      "content": "次世代VRにおけるHMDの重量バランスと、空間コンピューティング時代のUIについて。視線トラッキングを前提としたデザインアプローチをFigmaでプロトタイピング中。",
+      "imageUrls": [
+        "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?auto=format&fit=crop&w=600&q=80"
+      ],
+      "aiTags": ["#海", "#崖"],
       "createdAt": "2026-04-05T09:15:00Z"
     }
   ]
