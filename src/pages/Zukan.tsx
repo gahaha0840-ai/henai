@@ -324,8 +324,9 @@ function Zukan() {
           {/* コルクボード */}
           <div
             style={{
-              overflowX: "auto",
-              overflowY: "auto",
+              overflow: "hidden",
+              width: "100%",
+              height: "60vh",
               borderRadius: 12,
               maxHeight: "60vh",
               boxShadow: "0 4px 24px rgba(0,0,0,.15)",
