@@ -261,7 +261,7 @@ export default function Photos() {
             />
           </div>
 
-          {/* 日付範囲
+          {/* 日付範囲 
           <div>
             <PanelLabel>日付（から）</PanelLabel>
             <input
@@ -272,6 +272,7 @@ export default function Photos() {
               style={inputSt}
             />
           </div>
+          */}
           <div>
             <PanelLabel>日付（まで）</PanelLabel>
             <input
@@ -282,7 +283,6 @@ export default function Photos() {
               style={inputSt}
             />
           </div>
-           */}
 
           {/* 枚数 */}
           <div>
