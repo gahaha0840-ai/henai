@@ -72,7 +72,7 @@ export default function Photos() {
   >({});
   //いったん消してみるconst [panelOpen, setPanelOpen] = useState(false);
 
-  //chatgptここから
+  // 条件とパネルの開閉状態をローカルストレージに保存する
   const [cond, setCond] = useState<BoardCondition>(() => {
     const saved = localStorage.getItem("photoCond");
     return saved ? JSON.parse(saved) : defaultCondition;
@@ -219,7 +219,7 @@ export default function Photos() {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button
-            onClick={() => setPanelOpen((o) => !o)}
+            onClick={() => setPanelOpen((o: any) => !o)}
             style={{
               padding: "7px 14px",
               borderRadius: 8,
