@@ -19,6 +19,7 @@ export default function TagFilter({
         flexWrap: mode === "wrap" ? "wrap" : "nowrap",
         gap: 8,
         overflowX: mode === "row" ? "auto" : "visible",
+        alignItems: "center",
       }}
     >
       {/* すべて */}
