@@ -98,7 +98,7 @@
       "tags": [],
       "aiTags": ["#野生動物", "#鳥", "#水"],
       "date": "2026/04/05",
-      "imageUrl": "/images/tori1.jpg"
+      "imageUrl": "./images/tori1.jpg"
     },
     {
       "id": "p11",
