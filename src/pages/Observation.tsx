@@ -263,11 +263,11 @@ export default function Observation() {
           </div>
         </div>
       ) : (
-        /* Masonry風グリッド */
+        /* グリッド表示 */
         <div
           style={{
-            columns: "repeat(auto-fill,minmax(240px,1fr))",
-            columnGap: 16,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
             gap: 16,
           }}
         >
