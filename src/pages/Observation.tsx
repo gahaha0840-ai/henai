@@ -1,9 +1,8 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+// src/pages/Observation.tsx
+import { useState } from "react";
 import { useItems } from "../hooks/useItems.ts";
-import { PhotoMaterial, SavedBoard } from "../types/index.ts";
-import PhotoCard from "../components/PhotoCard.tsx";
-import ZukanCard from "../components/ZukanCard.tsx";
+import ItemCard from "../components/ItemCard.tsx";
+import TagChip from "../components/TagChip.tsx";
 
 const F = {
   serif: '"Noto Serif JP","Hiragino Mincho ProN",serif',
@@ -19,89 +18,33 @@ const C = {
   card: "#FCFAEF",
 };
 
-type FeedItem =
-  | { kind: "photo"; data: PhotoMaterial; id: string }
-  | { kind: "board"; data: SavedBoard; id: string };
-
-// シード付き乱数
-function seededRand(seed: number) {
-  let s = seed;
-  return () => {
-    s = (s * 1664525 + 1013904223) & 0xffffffff;
-    return (s >>> 0) / 0xffffffff;
-  };
-}
-
-// Fisher-Yates シャッフル（シード付き）
-function shuffle<T>(arr: T[], seed: number): T[] {
-  const a = [...arr];
-  const r = seededRand(seed);
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(r() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+const fonts = {
+  serif: '"Noto Serif JP", "Hiragino Mincho ProN", serif',
+  sans: '"Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
+};
 
 export default function Observation() {
-  const navigate = useNavigate();
+  // 1. useItemsから必要なデータだけを受け取る（useEffectでの取得はもう不要です！）
   const { photos, loading, error } = useItems();
   const [boards, setBoards] = useState<SavedBoard[]>([]);
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 99999));
   const [selTag, setSelTag] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "photo" | "board">("all");
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("savedBoards");
-      if (raw) setBoards(JSON.parse(raw));
-    } catch {
-      /* ignore */
-    }
-  }, []);
+  // 全タグの抽出
+  const allTags = [...new Set(photos.flatMap((i) => i.tags ?? []))];
+  const displayed = selTag
+    ? photos.filter((i) => i.tags?.includes(selTag))
+    : photos;
 
-  // 全タグ（フォト）
-  const allTags = useMemo(
-    () => [
-      ...new Set(
-        photos.flatMap((p) =>
-          (p.aiTags ?? p.tags ?? []).map((t) => t.replace(/^#/, "")),
-        ),
-      ),
-    ],
-    [photos],
-  );
-
-  // フィードアイテム生成
-  const feed = useMemo((): FeedItem[] => {
-    let photoItems: FeedItem[] = photos
-      .filter(
-        (p) =>
-          !selTag ||
-          (p.aiTags ?? p.tags ?? [])
-            .map((t) => t.replace(/^#/, ""))
-            .includes(selTag),
-      )
-      .map((p) => ({ kind: "photo" as const, data: p, id: `p-${p.id}` }));
-
-    let boardItems: FeedItem[] = boards
-      .filter((b) => !selTag || b.condition.tags.includes(selTag))
-      .map((b) => ({ kind: "board" as const, data: b, id: `b-${b.id}` }));
-
-    let merged: FeedItem[] =
-      filter === "photo"
-        ? photoItems
-        : filter === "board"
-          ? boardItems
-          : [...photoItems, ...boardItems];
-
-    return shuffle(merged, seed);
-  }, [photos, boards, seed, selTag, filter]);
-
-  const reshuffle = useCallback(
-    () => setSeed(Math.floor(Math.random() * 99999)),
-    [],
-  );
+  // ローディングとエラーの表示
+  if (loading)
+    return (
+      <div style={{ color: "#A39B8B", padding: "40px" }}>
+        観測データを展開中...
+      </div>
+    );
+  if (error)
+    return <div style={{ color: "#991B1B", padding: "40px" }}>{error}</div>;
 
   return (
     <>
@@ -263,27 +206,23 @@ export default function Observation() {
           </div>
         </div>
       ) : (
-        /* グリッド表示 */
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-            gap: 16,
+            gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))",
+            gap: "40px",
           }}
         >
-          {feed.map((item, i) => (
+          {displayed.map((item, index) => (
             <div
               key={item.id}
-              style={{ breakInside: "avoid", marginBottom: 16 }}
+              style={{
+                position: "relative",
+                // わずかにランダムな傾きを付与
+                transform: `rotate(${((index % 4) - 1.5) * 0.8}deg)`,
+              }}
             >
-              {item.kind === "photo" ? (
-                <PhotoCard item={item.data} />
-              ) : (
-                <ZukanCard
-                  board={item.data}
-                  onClick={() => navigate("/zukan")}
-                />
-              )}
+              <ItemCard item={item} onTagClick={setSelTag} />
             </div>
           ))}
         </div>
