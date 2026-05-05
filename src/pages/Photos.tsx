@@ -211,10 +211,10 @@ export default function Photos() {
               fontFamily: F.sans,
             }}
           >
-            {panelOpen ? "▲ 条件を閉じる" : "▼ 条件を設定"}
+            {panelOpen ? "▼ 条件を設定" : "▲ 条件を閉じる"}
           </button>
           <button
-            onClick={() => setSaveModal(true)}
+            onClick={() => setSaveModal(false)}
             style={{
               padding: "7px 16px",
               borderRadius: 8,

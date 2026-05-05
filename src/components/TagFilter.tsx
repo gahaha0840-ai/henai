@@ -46,12 +46,13 @@ export default function TagFilter({
             key={tag}
             onClick={() => onChange(tag)}
             style={{
-              padding: "4px 10px",
+              writingMode: "horizontal-tb", // タグが縦書きになるのを防ぐ
+              padding: "6px 14px", // タグのサイズに合わせて調整
               borderRadius: 9999,
               border: `1px solid ${active ? "#A68A61" : "#E6E0D4"}`,
               background: active ? "#A68A61" : "#F8F6F0",
               color: active ? "#fff" : "#A39B8B",
-              fontSize: 12,
+              fontSize: 10,
               cursor: "pointer",
               whiteSpace: "nowrap",
             }}
