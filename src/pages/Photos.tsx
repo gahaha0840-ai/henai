@@ -70,7 +70,7 @@ export default function Photos() {
   const [offsets, setOffsets] = useState<
     Record<string | number, { dx: number; dy: number }>
   >({});
-  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [saveModal, setSaveModal] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
