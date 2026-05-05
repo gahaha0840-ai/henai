@@ -196,7 +196,7 @@ export default function Observation() {
             e.currentTarget.style.background = "transparent";
           }}
         >
-          <span>🔀</span> 再配置する
+          <span></span> 再配置する
         </button>
       </header>
 
