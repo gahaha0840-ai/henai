@@ -112,18 +112,7 @@
       "aiTags": ["#VR", "#HMD", "#UIデザイン"],
       "createdAt": "2026-04-05T09:15:00Z"
     },
-    {
-      "id": "c4",
-      "authorId": "u1",
-      "title": "でっっていう",
-      "thumbnailUrl": "../public/images/gake.jpeg",
-      "content": "次世代VRにおけるHMDの重量バランスと、空間コンピューティング時代のUIについて。視線トラッキングを前提としたデザインアプローチをFigmaでプロトタイピング中。",
-      "imageUrls": [
-        "https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?auto=format&fit=crop&w=600&q=80"
-      ],
-      "aiTags": ["#海", "#崖"],
-      "createdAt": "2026-04-05T09:15:00Z"
-    },
+
     {
       "id": "c5",
       "authorId": "u1",
@@ -148,20 +137,6 @@
       "memo": "うみだうみだ",
       "aiTags": ["#雪", "#海"],
       "date": "2026-04-05"
-    },
-
-    {
-      "id": "c8",
-      "authorId": "user1",
-      "title": "知らない街の夜景みたいだ",
-      "thumbnailUrl": "../public/images/yakei.jpeg",
-      "content": "飛行機の窓から見下ろした知らない町の夜景みたいだ。",
-      "imageUrls": [
-        "../public/images/yakei.jpeg",
-        "../public/images/yakei.jpeg"
-      ],
-      "aiTags": ["#街", "#夜景"],
-      "createdAt": "2026-02-20T00:00:00Z"
     }
   ]
 }
