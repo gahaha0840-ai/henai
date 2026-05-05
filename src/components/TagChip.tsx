@@ -42,6 +42,7 @@ export default function TagChip({
         cursor: "pointer",
         fontFamily: fonts.sans,
         transition: "all 0.15s",
+        writingMode: "horizontal-tb", // 文字が縦に切れるのを防ぐ
         ...style,
       }}
     >
