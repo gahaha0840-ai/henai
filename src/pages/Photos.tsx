@@ -63,14 +63,34 @@ const defaultCondition: BoardCondition = {
   sizeIdx: 1,
   corkColor: CORK_COLORS[0].value,
 };
-
+// ── 条件で絞り込んだ写真をコルクボードに配置するページ ──
 export default function Photos() {
   const [photos, setPhotos] = useState<PhotoMaterial[]>([]);
-  const [cond, setCond] = useState<BoardCondition>(defaultCondition);
+  //いったん消してみるconst [cond, setCond] = useState<BoardCondition>(defaultCondition);
   const [offsets, setOffsets] = useState<
     Record<string | number, { dx: number; dy: number }>
   >({});
-  const [panelOpen, setPanelOpen] = useState(false);
+  //いったん消してみるconst [panelOpen, setPanelOpen] = useState(false);
+
+  //chatgptここから
+  const [cond, setCond] = useState<BoardCondition>(() => {
+    const saved = localStorage.getItem("photoCond");
+    return saved ? JSON.parse(saved) : defaultCondition;
+  });
+
+  const [panelOpen, setPanelOpen] = useState(() => {
+    const saved = localStorage.getItem("panelOpen");
+    return saved ? JSON.parse(saved) : false;
+  });
+  useEffect(() => {
+    localStorage.setItem("photoCond", JSON.stringify(cond));
+  }, [cond]);
+
+  useEffect(() => {
+    localStorage.setItem("panelOpen", JSON.stringify(panelOpen));
+  }, [panelOpen]);
+  //ここまで
+
   const [saveModal, setSaveModal] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
 
