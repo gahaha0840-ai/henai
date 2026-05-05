@@ -8,7 +8,7 @@
       "tags": [],
       "aiTags": ["#野生動物", "#冬", "#カメラ"],
       "date": "2026/02/12",
-      "imageUrl": "/images/tori3.jpg"
+      "imageUrl": "./images/tori3.jpg"
     },
     {
       "id": "p2",
@@ -18,7 +18,7 @@
       "tags": [],
       "aiTags": ["#恐竜", "#力学", "#造形"],
       "date": "2026/03/15",
-      "imageUrl": "/images/kyouryu2.jpg"
+      "imageUrl": "./images/kyouryu2.jpg"
     },
     {
       "id": "p3",
@@ -28,7 +28,7 @@
       "tags": [],
       "aiTags": ["#春", "#花", "#光"],
       "date": "2026/04/25",
-      "imageUrl": "/images/hana3.jpg"
+      "imageUrl": "./images/hana3.jpg"
     },
     {
       "id": "p4",
@@ -38,7 +38,7 @@
       "tags": [],
       "aiTags": ["#PCパーツ", "#GPU", "#開発環境"],
       "date": "2026/05/03",
-      "imageUrl": "/images/pc1.jpg"
+      "imageUrl": "./images/pc1.jpg"
     },
     {
       "id": "p5",
@@ -48,7 +48,7 @@
       "tags": [],
       "aiTags": ["#洋食", "#ランチ", "#エネルギー"],
       "date": "2026/05/01",
-      "imageUrl": "/images/kare1.jpg"
+      "imageUrl": "./images/kare1.jpg"
     },
     {
       "id": "p6",
@@ -58,7 +58,7 @@
       "tags": [],
       "aiTags": ["#夕日", "#シルエット", "#スナップ"],
       "date": "2026/02/15",
-      "imageUrl": "/images/yakei2.jpg"
+      "imageUrl": "./images/yakei2.jpg"
     },
     {
       "id": "p7",
@@ -68,7 +68,7 @@
       "tags": [],
       "aiTags": ["#メカニカル", "#ガジェット", "#DIY"],
       "date": "2026/04/18",
-      "imageUrl": "/images/keyboard1.jpg"
+      "imageUrl": "./images/keyboard1.jpg"
     },
     {
       "id": "p8",
@@ -78,7 +78,7 @@
       "tags": [],
       "aiTags": ["#木組み", "#造形", "#自然"],
       "date": "2026/03/28",
-      "imageUrl": "/images/sizen5.jpg"
+      "imageUrl": "./images/sizen5.jpg"
     },
     {
       "id": "p9",
@@ -88,7 +88,7 @@
       "tags": [],
       "aiTags": ["#夜景", "#都市", "#光"],
       "date": "2026/05/10",
-      "imageUrl": "/images/yakei1.jpg"
+      "imageUrl": "./images/yakei1.jpg"
     },
     {
       "id": "p10",
@@ -108,7 +108,7 @@
       "tags": [],
       "aiTags": ["#恐竜", "#骨格", "#博物館"],
       "date": "2026/03/20",
-      "imageUrl": "/images/kyouryu1.jpg"
+      "imageUrl": "./images/kyouryu1.jpg"
     },
     {
       "id": "p12",
@@ -118,7 +118,7 @@
       "tags": [],
       "aiTags": ["#野生動物", "#鳥", "#自然"],
       "date": "2026/10/15",
-      "imageUrl": "/images/tori2.jpg"
+      "imageUrl": "./images/tori2.jpg"
     },
     {
       "id": "p13",
@@ -128,7 +128,7 @@
       "tags": [],
       "aiTags": ["#城", "#歴史", "#建築"],
       "date": "2026/11/20",
-      "imageUrl": "/images/siro1.jpg"
+      "imageUrl": "./images/siro1.jpg"
     },
     {
       "id": "p14",
@@ -138,7 +138,7 @@
       "tags": [],
       "aiTags": ["#花", "#マクロ", "#自然"],
       "date": "2026/12/05",
-      "imageUrl": "/images/hana2.jpg"
+      "imageUrl": "./images/hana2.jpg"
     },
     {
       "id": "p15",
@@ -148,7 +148,7 @@
       "tags": [],
       "aiTags": ["#ラーメン", "#グルメ", "#食事"],
       "date": "2026/03/20",
-      "imageUrl": "/images/men1.jpg"
+      "imageUrl": "./images/men1.jpg"
     }
   ],
   "collections": []
